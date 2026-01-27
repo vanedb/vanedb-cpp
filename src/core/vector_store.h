@@ -1,6 +1,6 @@
 // QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
-#include "distance.h"
+#include "distance_strategy.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -14,8 +14,6 @@
 
 namespace quiverdb {
 
-enum class DistanceMetric { L2, COSINE, DOT };
-
 struct SearchResult {
   uint64_t id;
   float distance;
@@ -25,7 +23,7 @@ struct SearchResult {
 class VectorStore {
 public:
   explicit VectorStore(size_t dimension, DistanceMetric metric = DistanceMetric::L2)
-      : dim_(dimension), metric_(metric) {
+      : dim_(dimension), metric_(metric), dist_(metric, dimension) {
     if (dimension == 0) throw std::invalid_argument("Dimension must be > 0");
   }
 
@@ -77,7 +75,7 @@ public:
     std::vector<SearchResult> results;
     results.reserve(ids_.size());
     for (size_t i = 0; i < ids_.size(); ++i)
-      results.push_back({ids_[i], compute_distance(query, vectors_data_.data() + i * dim_)});
+      results.push_back({ids_[i], dist_(query, vectors_data_.data() + i * dim_)});
     size_t n = std::min(k, results.size());
     std::partial_sort(results.begin(), results.begin() + n, results.end());
     results.resize(n);
@@ -117,17 +115,9 @@ public:
   }
 
 private:
-  float compute_distance(const float* a, const float* b) const {
-    switch (metric_) {
-      case DistanceMetric::L2: return l2_sq(a, b, dim_);
-      case DistanceMetric::COSINE: return cosine_distance(a, b, dim_);
-      case DistanceMetric::DOT: return -dot_product(a, b, dim_);
-      default: return std::numeric_limits<float>::infinity();
-    }
-  }
-
   size_t dim_;
   DistanceMetric metric_;
+  DistanceComputer dist_;
   std::vector<float> vectors_data_;
   std::vector<uint64_t> ids_;
   std::unordered_map<uint64_t, size_t> id_to_index_;

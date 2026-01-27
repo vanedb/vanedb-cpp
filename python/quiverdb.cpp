@@ -19,18 +19,21 @@ PYBIND11_MODULE(quiverdb_py, m) {
     m.attr("VERSION_MINOR") = VERSION_MINOR;
     m.attr("VERSION_PATCH") = VERSION_PATCH;
 
-    // Bind HNSWDistanceMetric enum
-    py::enum_<HNSWDistanceMetric>(m, "HNSWDistanceMetric")
-        .value("L2", HNSWDistanceMetric::L2)
-        .value("COSINE", HNSWDistanceMetric::COSINE)
-        .value("DOT", HNSWDistanceMetric::DOT)
-        .export_values(); // Exports enum values to the module scope
+    // Bind DistanceMetric enum (canonical, used by all stores)
+    py::enum_<DistanceMetric>(m, "DistanceMetric")
+        .value("L2", DistanceMetric::L2)
+        .value("COSINE", DistanceMetric::COSINE)
+        .value("DOT", DistanceMetric::DOT)
+        .export_values();
+
+    // HNSWDistanceMetric is now an alias for DistanceMetric
+    m.attr("HNSWDistanceMetric") = m.attr("DistanceMetric");
 
     // Bind HNSWIndex class
     py::class_<HNSWIndex>(m, "HNSWIndex")
-        .def(py::init<size_t, HNSWDistanceMetric, size_t, size_t, size_t, uint32_t>(),
+        .def(py::init<size_t, DistanceMetric, size_t, size_t, size_t, uint32_t>(),
              py::arg("dimension"),
-             py::arg("metric") = HNSWDistanceMetric::L2,
+             py::arg("metric") = DistanceMetric::L2,
              py::arg("max_elements") = 100000,
              py::arg("M") = 16,
              py::arg("ef_construction") = 200,
@@ -114,13 +117,6 @@ PYBIND11_MODULE(quiverdb_py, m) {
             },
             py::arg("filename"), "Loads the index from a binary file",
             py::return_value_policy::take_ownership);
-
-    // Bind DistanceMetric enum (for VectorStore and MMapVectorStore)
-    py::enum_<DistanceMetric>(m, "DistanceMetric")
-        .value("L2", DistanceMetric::L2)
-        .value("COSINE", DistanceMetric::COSINE)
-        .value("DOT", DistanceMetric::DOT)
-        .export_values();
 
     // Bind VectorStore class (brute-force, thread-safe)
     py::class_<VectorStore>(m, "VectorStore")

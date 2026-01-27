@@ -119,6 +119,14 @@ target_compile_options(test_hnsw_index PRIVATE
 )
 target_link_options(test_hnsw_index PRIVATE ${COVERAGE_LINK_FLAGS})
 
+add_executable(test_distance_strategy tests/test_distance_strategy.cpp)
+target_link_libraries(test_distance_strategy PRIVATE quiverdb Catch2::Catch2WithMain)
+target_compile_options(test_distance_strategy PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/W4>
+  ${COVERAGE_COMPILE_FLAGS}
+)
+target_link_options(test_distance_strategy PRIVATE ${COVERAGE_LINK_FLAGS})
+
 add_executable(test_mmap_vector_store tests/test_mmap_vector_store.cpp)
 target_link_libraries(test_mmap_vector_store PRIVATE quiverdb Catch2::Catch2WithMain)
 target_compile_options(test_mmap_vector_store PRIVATE
@@ -133,6 +141,7 @@ include(Catch)
 catch_discover_tests(test_distance)
 catch_discover_tests(test_vector_store)
 catch_discover_tests(test_hnsw_index)
+catch_discover_tests(test_distance_strategy)
 catch_discover_tests(test_mmap_vector_store)
 endif() # QUIVERDB_BUILD_TESTS
 

@@ -21,6 +21,9 @@
 
 namespace quiverdb {
 
+/// Named constant for cosine distance zero-norm threshold
+inline constexpr float COSINE_EPSILON = 1e-12f;
+
 #ifdef QUIVER_ARM_NEON
 [[nodiscard]] inline float hsum(float32x4_t v) noexcept {
 #if defined(__aarch64__)
@@ -125,7 +128,7 @@ namespace quiverdb {
   }
 
   float denom = na * nb;
-  if (denom < 1e-12f) return 1.0f;
+  if (denom < COSINE_EPSILON) return 1.0f;
   float sim = dot / sqrtf(denom);
   return 1.0f - std::clamp(sim, -1.0f, 1.0f);
 }
