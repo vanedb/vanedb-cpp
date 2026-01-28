@@ -7,7 +7,7 @@
 #include <fstream>
 #include "core/distance_strategy.h"
 #include "core/detail/file_utils.h"
-#include "core/hnsw_index.h"  // For MIN_LEVEL_RANDOM
+#include "core/hnsw_index.h"  // For HNSWIndex::MIN_LEVEL_RANDOM
 
 using namespace quiverdb;
 
@@ -52,7 +52,7 @@ TEST_CASE("HNSWDistanceMetric is alias for DistanceMetric", "[distance_strategy]
 
 TEST_CASE("Named constants have expected values", "[distance_strategy]") {
   REQUIRE(COSINE_EPSILON == 1e-12f);
-  REQUIRE(MIN_LEVEL_RANDOM == 1e-9);
+  REQUIRE(HNSWIndex::MIN_LEVEL_RANDOM == 1e-9);
 }
 
 TEST_CASE("Explicit enum values are stable", "[distance_strategy]") {
@@ -101,6 +101,17 @@ TEST_CASE("resolve_distance_fn returns correct functions", "[distance_strategy]"
 
   auto l2_fn = resolve_distance_fn(DistanceMetric::L2);
   REQUIRE(l2_fn(a, b, 2) == l2_sq(a, b, 2));
+}
+
+TEST_CASE("resolve_distance_fn returns nullptr for invalid metric", "[distance_strategy]") {
+  auto fn = resolve_distance_fn(static_cast<DistanceMetric>(99));
+  REQUIRE(fn == nullptr);
+
+  // DistanceComputer with invalid metric returns infinity
+  DistanceComputer dc(static_cast<DistanceMetric>(99), 4);
+  float a[] = {1.0f, 2.0f, 3.0f, 4.0f};
+  float b[] = {5.0f, 6.0f, 7.0f, 8.0f};
+  REQUIRE(std::isinf(dc(a, b)));
 }
 
 TEST_CASE("DistanceComputer with zero dimension", "[distance_strategy]") {

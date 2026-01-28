@@ -16,7 +16,8 @@ using HNSWDistanceMetric [[deprecated("Use DistanceMetric instead")]] = Distance
   return -dot_product(a, b, n);
 }
 
-/// Function pointer type for distance computation
+/// Function pointer type for distance computation.
+/// Note: target functions must be declared noexcept (part of the type in C++17).
 using DistanceFn = float(*)(const float*, const float*, size_t) noexcept;
 
 /// Resolves a DistanceMetric to its corresponding distance function pointer.

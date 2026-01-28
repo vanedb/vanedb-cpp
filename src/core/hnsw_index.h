@@ -21,9 +21,6 @@
 #include <vector>
 namespace quiverdb {
 
-/// Named constant replacing magic 1e-9 in HNSW level generation
-inline constexpr double MIN_LEVEL_RANDOM = 1e-9;
-
 namespace detail {
 template <typename T> void write_bin(std::ofstream& f, const T& v) {
   f.write(reinterpret_cast<const char*>(&v), sizeof(T));
@@ -61,6 +58,7 @@ public:
   static constexpr uint32_t VERSION = 2;  // v2: added RNG state serialization
   static constexpr int MAX_LEVEL = 32;  // Reasonable upper bound for HNSW levels
   static constexpr size_t INVALID_ID = static_cast<size_t>(-1);  // Sentinel for empty entry point
+  static constexpr double MIN_LEVEL_RANDOM = 1e-9;  // Clamp floor for level generation RNG
 
   explicit HNSWIndex(size_t dimension, DistanceMetric metric = DistanceMetric::L2,
       size_t max_elements = 100000, size_t M = 16, size_t ef_construction = 200, uint32_t seed = 42)
