@@ -31,6 +31,7 @@ using DistanceFn = float(*)(const float*, const float*, size_t) noexcept;
 }
 
 /// Precomputed distance computation: stores function pointer + dimension.
+/// Default-constructed instances are invalid; operator() returns infinity.
 class DistanceComputer {
 public:
   DistanceComputer() noexcept = default;
@@ -39,7 +40,7 @@ public:
       : fn_(resolve_distance_fn(metric)), dim_(dimension) {}
 
   [[nodiscard]] float operator()(const float* a, const float* b) const noexcept {
-    if (!fn_) return std::numeric_limits<float>::infinity();
+    if (!fn_) [[unlikely]] return std::numeric_limits<float>::infinity();
     return fn_(a, b, dim_);
   }
 

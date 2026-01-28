@@ -18,7 +18,7 @@ namespace detail {
 
 /// Cross-platform fsync utility. Reopens file by path, flushes to disk, closes.
 /// No-op if the file cannot be opened (best-effort durability).
-inline void fsync_file(const std::string& path) {
+inline void fsync_file(const std::string& path) noexcept {
 #if defined(_WIN32) || defined(_WIN64)
   HANDLE hFile = CreateFileA(path.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL,
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
