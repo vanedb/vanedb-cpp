@@ -24,7 +24,7 @@ inline void fsync_file(const std::string& path) {
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (hFile != INVALID_HANDLE_VALUE) { FlushFileBuffers(hFile); CloseHandle(hFile); }
 #elif defined(__unix__) || defined(__APPLE__)
-  int fd = open(path.c_str(), O_RDONLY);
+  int fd = open(path.c_str(), O_WRONLY);
   if (fd >= 0) { fsync(fd); close(fd); }
 #endif
 }

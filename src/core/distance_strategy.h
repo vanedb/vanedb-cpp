@@ -25,8 +25,8 @@ using DistanceFn = float(*)(const float*, const float*, size_t) noexcept;
     case DistanceMetric::L2:     return &l2_sq;
     case DistanceMetric::COSINE: return &cosine_distance;
     case DistanceMetric::DOT:    return &negated_dot_product;
+    default:                     return nullptr;
   }
-  return nullptr;  // unreachable with valid enum
 }
 
 /// Precomputed distance computation: stores function pointer + dimension.
