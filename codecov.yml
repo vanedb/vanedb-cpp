@@ -1,16 +1,45 @@
+# Codecov configuration for quiverdb
+# Documentation: https://docs.codecov.com/docs/codecov-yaml
+
 coverage:
+  precision: 2
+  round: down
+  range: 70..100
+
   status:
     project:
       default:
         target: auto
         threshold: 1%
+        base: auto
     patch:
       default:
         target: auto
         threshold: 1%
+        base: auto
 
+# Ignore patterns - exclude test files, benchmarks, examples, and dependencies
 ignore:
-  - "tests/**"
-  - "benchmarks/**"
-  - "external/**"
-  - "build/**"
+  - "tests/**/*"           # All test files
+  - "benchmarks/**/*"      # All benchmark files
+  - "examples/**/*"        # Example code
+  - "python/**/*"          # Python bindings (separate testing)
+  - "external/**/*"        # Third-party submodules
+  - "build/**/*"           # Build artifacts
+  - "**/_deps/**/*"        # CMake FetchContent dependencies
+
+# Comment configuration - reduce noise on PRs
+comment:
+  layout: "reach,diff,flags,tree,footer"
+  behavior: default
+  require_changes: true
+  require_base: false
+  require_head: true
+
+# Only measure coverage for source code in src/core/
+# This ensures test file changes don't affect coverage reports
+flags:
+  core:
+    paths:
+      - src/core/
+    carryforward: true
