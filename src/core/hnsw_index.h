@@ -84,13 +84,12 @@ public:
     ext_ids_.resize(max_elements);
     levels_.resize(max_elements, 0);
     neighbors_.resize(max_elements);
-    locks_.reserve(max_elements);
-    for (size_t i = 0; i < max_elements; ++i) locks_.push_back(std::make_unique<std::shared_mutex>());
   }
 
-  // Thread-safety: global_mtx_ serializes ALL add() calls. Per-node locks_ are for
-  // reader-writer sync between add() and concurrent search() calls only.
-  // This design prevents ABBA deadlocks since only one add() runs at a time.
+  // Thread-safety: global_mtx_ is the single sync point. add() holds it
+  // exclusive; readers (search/size/contains/get_vector/save) hold it shared.
+  // No per-node locks are needed because add() can never run concurrently
+  // with any reader.
   void add(uint64_t id, const float* vec) {
     if (!vec) throw std::invalid_argument("Vector must not be null");
     std::unique_lock glock(global_mtx_);  // Exclusive: only one add() at a time
@@ -118,7 +117,6 @@ public:
         bool changed = true;
         while (changed) {
           changed = false;
-          std::shared_lock lk(*locks_[curr]);
           for (size_t n : neighbors_[curr][l]) {
             float nd = dist(vec, get_vec(n));
             if (nd < d) { d = nd; curr = n; changed = true; }
@@ -130,12 +128,10 @@ public:
     for (int l = std::min(level, cur_max_level); l >= 0; --l) {
       auto top = search_layer(vec, curr, ef_construction_, l);
       auto sel = select_neighbors(top, M_, l);
-      // Narrow scope: lock iid, assign, unlock BEFORE iterating neighbors (no ABBA possible)
-      { std::unique_lock lk(*locks_[iid]); neighbors_[iid][l] = std::move(sel); }
+      neighbors_[iid][l] = std::move(sel);
 
       size_t max_conn = l == 0 ? M_max0_ : M_max_;
       for (size_t nid : neighbors_[iid][l]) {
-        std::unique_lock lk(*locks_[nid]);  // Only one lock held at a time
         auto& nc = neighbors_[nid][l];
         if (nc.size() < max_conn) { nc.push_back(iid); }
         else {
@@ -174,7 +170,6 @@ public:
       bool changed = true;
       while (changed) {
         changed = false;
-        std::shared_lock lk(*locks_[curr]);
         if (static_cast<int>(neighbors_[curr].size()) <= l) continue;
         for (size_t n : neighbors_[curr][l]) {
           float nd = dist(query, get_vec(n));
@@ -356,10 +351,6 @@ public:
       if (rng_ss.fail()) throw std::runtime_error("Corrupted file: invalid RNG state");
     }
     // Note: v1 files don't have RNG state, level_gen_ keeps default initialization
-
-    idx->locks_.clear();
-    idx->locks_.reserve(max_el);
-    for (size_t i = 0; i < max_el; ++i) idx->locks_.push_back(std::make_unique<std::shared_mutex>());
     return idx;
   }
 
@@ -385,8 +376,11 @@ private:
   }
 
   MaxHeap search_layer(const float* q, size_t ep, size_t ef, int level) const {
-    std::unordered_set<size_t> vis;
-    vis.insert(ep);
+    // Bitmap visited tracker sized to live element count. O(1) check/insert
+    // with cache-friendly access; libc++ std::unordered_set is much slower
+    // here due to chained-bucket layout and identity hashing of size_t.
+    std::vector<uint8_t> vis(count_.load(std::memory_order_relaxed), 0);
+    vis[ep] = 1;
     std::priority_queue<std::pair<float, size_t>, std::vector<std::pair<float, size_t>>,
                         std::greater<std::pair<float, size_t>>> cands;
     MaxHeap res;
@@ -399,11 +393,10 @@ private:
       auto [cd, cid] = cands.top();
       if (cd > lb && res.size() >= ef) break;
       cands.pop();
-      std::shared_lock lk(*locks_[cid]);
       if (static_cast<int>(neighbors_[cid].size()) <= level) continue;
       for (size_t n : neighbors_[cid][level]) {
-        if (vis.count(n)) continue;
-        vis.insert(n);
+        if (vis[n]) continue;
+        vis[n] = 1;
         float nd = dist(q, get_vec(n));
         if (res.size() < ef || nd < lb) {
           cands.emplace(nd, n);
@@ -462,7 +455,6 @@ private:
   std::atomic<int> max_level_{-1};
   std::atomic<size_t> count_{0};
   mutable std::shared_mutex global_mtx_;
-  mutable std::vector<std::unique_ptr<std::shared_mutex>> locks_;
 };
 
 } // namespace quiverdb
