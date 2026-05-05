@@ -376,11 +376,22 @@ private:
   }
 
   MaxHeap search_layer(const float* q, size_t ep, size_t ef, int level) const {
-    // Bitmap visited tracker sized to live element count. O(1) check/insert
-    // with cache-friendly access; libc++ std::unordered_set is much slower
-    // here due to chained-bucket layout and identity hashing of size_t.
-    std::vector<uint8_t> vis(count_.load(std::memory_order_relaxed), 0);
-    vis[ep] = 1;
+    // Versioned thread-local visited tracker. Internal IDs are assigned
+    // sequentially (iid = count_++) so every live node ID is in [0, count_)
+    // and indexing is always in-bounds. Comparing each slot against an epoch
+    // counter avoids the per-search O(N) zero-init a fresh bitmap would incur,
+    // preserving HNSW's sub-linear search complexity at scale.
+    static thread_local std::vector<uint32_t> vis;
+    static thread_local uint32_t vis_epoch = 0;
+
+    const size_t total = count_.load(std::memory_order_relaxed);
+    if (vis.size() < total) vis.resize(total, 0);
+    if (++vis_epoch == 0) {
+      // Epoch wrap (after ~4B searches on this thread): reset state.
+      std::fill(vis.begin(), vis.end(), 0);
+      vis_epoch = 1;
+    }
+    vis[ep] = vis_epoch;
     std::priority_queue<std::pair<float, size_t>, std::vector<std::pair<float, size_t>>,
                         std::greater<std::pair<float, size_t>>> cands;
     MaxHeap res;
@@ -395,8 +406,8 @@ private:
       cands.pop();
       if (static_cast<int>(neighbors_[cid].size()) <= level) continue;
       for (size_t n : neighbors_[cid][level]) {
-        if (vis[n]) continue;
-        vis[n] = 1;
+        if (vis[n] == vis_epoch) continue;
+        vis[n] = vis_epoch;
         float nd = dist(q, get_vec(n));
         if (res.size() < ef || nd < lb) {
           cands.emplace(nd, n);
