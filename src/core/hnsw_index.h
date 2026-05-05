@@ -3,6 +3,7 @@
 #include "distance.h"
 #include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -376,21 +377,29 @@ private:
   }
 
   MaxHeap search_layer(const float* q, size_t ep, size_t ef, int level) const {
-    // Versioned thread-local visited tracker. Internal IDs are assigned
+    // Versioned thread-local visited bitmap. Internal IDs are assigned
     // sequentially (iid = count_++) so every live node ID is in [0, count_)
     // and indexing is always in-bounds. Comparing each slot against an epoch
     // counter avoids the per-search O(N) zero-init a fresh bitmap would incur,
     // preserving HNSW's sub-linear search complexity at scale.
+    //
+    // The buffer is shared across all HNSWIndex instances on a given thread:
+    // it grows to the high-water mark of count_ across them, and the
+    // monotonically-increasing epoch ensures stale marks from a prior search
+    // (possibly on a different index) are never read as current.
     static thread_local std::vector<uint32_t> vis;
     static thread_local uint32_t vis_epoch = 0;
 
     const size_t total = count_.load(std::memory_order_relaxed);
+    assert(ep < total);
     if (vis.size() < total) vis.resize(total, 0);
-    if (++vis_epoch == 0) {
-      // Epoch wrap (after ~4B searches on this thread): reset state.
+    if (++vis_epoch == 0) {  // LCOV_EXCL_START
+      // Epoch wrap requires ~4B searches on this thread before reaching the
+      // reset path; excluded from line coverage as it is not reachable in
+      // any realistic test run.
       std::fill(vis.begin(), vis.end(), 0);
       vis_epoch = 1;
-    }
+    }  // LCOV_EXCL_STOP
     vis[ep] = vis_epoch;
     std::priority_queue<std::pair<float, size_t>, std::vector<std::pair<float, size_t>>,
                         std::greater<std::pair<float, size_t>>> cands;
