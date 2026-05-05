@@ -800,3 +800,37 @@ TEST_CASE("HNSWIndex - contains edge cases", "[hnsw]") {
     REQUIRE_FALSE(index.contains(43));
   }
 }
+
+TEST_CASE("HNSWIndex - search_layer epoch wrap", "[hnsw]") {
+  // The thread-local visited bitmap uses a uint16_t epoch counter that wraps
+  // every 65,536 searches. Run more than that to drive the wrap-and-reset
+  // branch, then confirm result correctness is preserved across the wrap.
+  constexpr size_t dim = 4;
+  constexpr size_t n = 32;
+  quiverdb::HNSWIndex index(dim, quiverdb::HNSWDistanceMetric::L2, n);
+  std::mt19937 gen(7);
+  std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
+  for (size_t i = 0; i < n; ++i) {
+    std::vector<float> v(dim);
+    for (auto& x : v) x = dis(gen);
+    index.add(i, v.data());
+  }
+
+  std::vector<float> q(dim);
+  for (auto& x : q) x = dis(gen);
+  auto first = index.search(q.data(), 5);
+  REQUIRE(first.size() == 5);
+
+  // 70_000 > 65_535 ensures at least one epoch wrap.
+  for (int i = 0; i < 70'000; ++i) {
+    auto r = index.search(q.data(), 5);
+    REQUIRE(r.size() == 5);
+  }
+
+  auto last = index.search(q.data(), 5);
+  REQUIRE(last.size() == first.size());
+  for (size_t i = 0; i < first.size(); ++i) {
+    REQUIRE(last[i].id == first[i].id);
+    REQUIRE(last[i].distance == Catch::Approx(first[i].distance));
+  }
+}

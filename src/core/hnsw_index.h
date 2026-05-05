@@ -387,19 +387,19 @@ private:
     // it grows to the high-water mark of count_ across them, and the
     // monotonically-increasing epoch ensures stale marks from a prior search
     // (possibly on a different index) are never read as current.
-    static thread_local std::vector<uint32_t> vis;
-    static thread_local uint32_t vis_epoch = 0;
+    static thread_local std::vector<uint16_t> vis;
+    static thread_local uint16_t vis_epoch = 0;
 
     const size_t total = count_.load(std::memory_order_relaxed);
     assert(ep < total);
     if (vis.size() < total) vis.resize(total, 0);
-    if (++vis_epoch == 0) {  // LCOV_EXCL_START
-      // Epoch wrap requires ~4B searches on this thread before reaching the
-      // reset path; excluded from line coverage as it is not reachable in
-      // any realistic test run.
+    if (++vis_epoch == 0) {
+      // Epoch wraps every 65,536 searches per thread; reset slot state so no
+      // stale mark from a prior epoch can be read as current. Exercised by
+      // the "search_layer epoch wrap" test.
       std::fill(vis.begin(), vis.end(), 0);
       vis_epoch = 1;
-    }  // LCOV_EXCL_STOP
+    }
     vis[ep] = vis_epoch;
     std::priority_queue<std::pair<float, size_t>, std::vector<std::pair<float, size_t>>,
                         std::greater<std::pair<float, size_t>>> cands;
