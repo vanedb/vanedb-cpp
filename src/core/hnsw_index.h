@@ -384,12 +384,15 @@ private:
     // preserving HNSW's sub-linear search complexity at scale.
     //
     // The buffer is shared across all HNSWIndex instances on a given thread:
-    // it grows to the high-water mark of count_ across them, and the
-    // monotonically-increasing epoch ensures stale marks from a prior search
-    // (possibly on a different index) are never read as current.
+    // it grows to the high-water mark of count_ across them and is never
+    // freed for the lifetime of the thread, and the monotonically-increasing
+    // epoch ensures stale marks from a prior search (possibly on a different
+    // index) are never read as current.
     static thread_local std::vector<uint16_t> vis;
     static thread_local uint16_t vis_epoch = 0;
 
+    // relaxed load is safe: every caller holds global_mtx_ (exclusive in
+    // add(), shared in search()), and the mutex provides the synchronization.
     const size_t total = count_.load(std::memory_order_relaxed);
     assert(ep < total);
     if (vis.size() < total) vis.resize(total, 0);
