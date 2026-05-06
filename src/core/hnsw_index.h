@@ -3,7 +3,6 @@
 #include "distance.h"
 #include <algorithm>
 #include <atomic>
-#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -388,7 +387,11 @@ private:
     static thread_local std::vector<uint16_t> vis;
     static thread_local uint16_t vis_epoch = 0;
     const size_t total = count_.load(std::memory_order_relaxed);
-    assert(ep < total);  // entry-point ID must be a live node; load() validates this on deserialize
+    // Entry-point ID must be a live node. load() validates this for persisted
+    // indexes; a runtime check here also catches in-memory corruption or future
+    // call-site bugs (release builds strip asserts).
+    if (ep >= total) [[unlikely]]
+      throw std::logic_error("HNSWIndex::search_layer: entry point out of range");
     if (vis.size() < total) vis.resize(total, 0);
     if (++vis_epoch == 0) {
       std::fill(vis.begin(), vis.end(), 0);
