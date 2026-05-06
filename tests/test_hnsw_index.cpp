@@ -9,6 +9,7 @@
 #include <fstream>
 #include <random>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 using Catch::Approx;

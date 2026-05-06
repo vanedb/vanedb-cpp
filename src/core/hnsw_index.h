@@ -18,7 +18,6 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef NOMINMAX
@@ -377,29 +376,21 @@ private:
   }
 
   MaxHeap search_layer(const float* q, size_t ep, size_t ef, int level) const {
-    // Versioned thread-local visited bitmap. Internal IDs are assigned
-    // sequentially (iid = count_++) so every live node ID is in [0, count_)
-    // and indexing is always in-bounds. Comparing each slot against an epoch
-    // counter avoids the per-search O(N) zero-init a fresh bitmap would incur,
-    // preserving HNSW's sub-linear search complexity at scale.
+    // Versioned thread-local visited bitmap. vis[i] == vis_epoch means
+    // visited; bumping the epoch each call replaces the per-search O(N)
+    // zero-init a fresh bitmap would need with one O(count_) fill every
+    // 65k searches when the uint16_t epoch wraps. Buffer is shared across
+    // HNSWIndex instances on a thread (monotonic epoch keeps cross-index
+    // marks distinct) and is never shrunk.
     //
-    // The buffer is shared across all HNSWIndex instances on a given thread:
-    // it grows to the high-water mark of count_ across them and is never
-    // freed for the lifetime of the thread, and the monotonically-increasing
-    // epoch ensures stale marks from a prior search (possibly on a different
-    // index) are never read as current.
+    // Relaxed load on count_ is safe: every caller holds global_mtx_
+    // (exclusive in add(), shared in search()).
     static thread_local std::vector<uint16_t> vis;
     static thread_local uint16_t vis_epoch = 0;
-
-    // relaxed load is safe: every caller holds global_mtx_ (exclusive in
-    // add(), shared in search()), and the mutex provides the synchronization.
     const size_t total = count_.load(std::memory_order_relaxed);
     assert(ep < total);
     if (vis.size() < total) vis.resize(total, 0);
     if (++vis_epoch == 0) {
-      // Epoch wraps every 65,536 searches per thread; reset slot state so no
-      // stale mark from a prior epoch can be read as current. Exercised by
-      // the "search_layer epoch wrap" test.
       std::fill(vis.begin(), vis.end(), 0);
       vis_epoch = 1;
     }
@@ -454,10 +445,9 @@ private:
       if (ok) r.push_back(cid);
     }
     if (r.size() < M) {
-      std::unordered_set<size_t> sel(r.begin(), r.end());
       for (auto& p : sorted) {
         if (r.size() >= M) break;
-        if (!sel.count(p.second)) r.push_back(p.second);
+        if (std::find(r.begin(), r.end(), p.second) == r.end()) r.push_back(p.second);
       }
     }
     return r;
