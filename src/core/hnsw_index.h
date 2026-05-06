@@ -17,7 +17,6 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef NOMINMAX
@@ -84,13 +83,12 @@ public:
     ext_ids_.resize(max_elements);
     levels_.resize(max_elements, 0);
     neighbors_.resize(max_elements);
-    locks_.reserve(max_elements);
-    for (size_t i = 0; i < max_elements; ++i) locks_.push_back(std::make_unique<std::shared_mutex>());
   }
 
-  // Thread-safety: global_mtx_ serializes ALL add() calls. Per-node locks_ are for
-  // reader-writer sync between add() and concurrent search() calls only.
-  // This design prevents ABBA deadlocks since only one add() runs at a time.
+  // Thread-safety: global_mtx_ is the single sync point. add() holds it
+  // exclusive; readers (search/size/contains/get_vector/save) hold it shared.
+  // No per-node locks are needed because add() can never run concurrently
+  // with any reader.
   void add(uint64_t id, const float* vec) {
     if (!vec) throw std::invalid_argument("Vector must not be null");
     std::unique_lock glock(global_mtx_);  // Exclusive: only one add() at a time
@@ -118,7 +116,6 @@ public:
         bool changed = true;
         while (changed) {
           changed = false;
-          std::shared_lock lk(*locks_[curr]);
           for (size_t n : neighbors_[curr][l]) {
             float nd = dist(vec, get_vec(n));
             if (nd < d) { d = nd; curr = n; changed = true; }
@@ -130,12 +127,10 @@ public:
     for (int l = std::min(level, cur_max_level); l >= 0; --l) {
       auto top = search_layer(vec, curr, ef_construction_, l);
       auto sel = select_neighbors(top, M_, l);
-      // Narrow scope: lock iid, assign, unlock BEFORE iterating neighbors (no ABBA possible)
-      { std::unique_lock lk(*locks_[iid]); neighbors_[iid][l] = std::move(sel); }
+      neighbors_[iid][l] = std::move(sel);
 
       size_t max_conn = l == 0 ? M_max0_ : M_max_;
       for (size_t nid : neighbors_[iid][l]) {
-        std::unique_lock lk(*locks_[nid]);  // Only one lock held at a time
         auto& nc = neighbors_[nid][l];
         if (nc.size() < max_conn) { nc.push_back(iid); }
         else {
@@ -174,7 +169,6 @@ public:
       bool changed = true;
       while (changed) {
         changed = false;
-        std::shared_lock lk(*locks_[curr]);
         if (static_cast<int>(neighbors_[curr].size()) <= l) continue;
         for (size_t n : neighbors_[curr][l]) {
           float nd = dist(query, get_vec(n));
@@ -356,10 +350,6 @@ public:
       if (rng_ss.fail()) throw std::runtime_error("Corrupted file: invalid RNG state");
     }
     // Note: v1 files don't have RNG state, level_gen_ keeps default initialization
-
-    idx->locks_.clear();
-    idx->locks_.reserve(max_el);
-    for (size_t i = 0; i < max_el; ++i) idx->locks_.push_back(std::make_unique<std::shared_mutex>());
     return idx;
   }
 
@@ -385,8 +375,29 @@ private:
   }
 
   MaxHeap search_layer(const float* q, size_t ep, size_t ef, int level) const {
-    std::unordered_set<size_t> vis;
-    vis.insert(ep);
+    // Versioned thread-local visited bitmap. vis[i] == vis_epoch means
+    // visited; bumping the epoch each call replaces the per-search O(N)
+    // zero-init a fresh bitmap would need with one O(count_) fill every
+    // 65k searches when the uint16_t epoch wraps. Buffer is shared across
+    // HNSWIndex instances on a thread (monotonic epoch keeps cross-index
+    // marks distinct) and is never shrunk.
+    //
+    // Relaxed load on count_ is safe: every caller holds global_mtx_
+    // (exclusive in add(), shared in search()).
+    static thread_local std::vector<uint16_t> vis;
+    static thread_local uint16_t vis_epoch = 0;
+    const size_t total = count_.load(std::memory_order_relaxed);
+    // Entry-point ID must be a live node. load() validates this for persisted
+    // indexes; this hot-path guard also catches in-memory corruption or future
+    // call-site bugs. Defensive — unreachable by construction in tests.
+    if (ep >= total) [[unlikely]]  // LCOV_EXCL_LINE
+      throw std::logic_error("HNSWIndex::search_layer: entry point out of range");  // LCOV_EXCL_LINE
+    if (vis.size() < total) vis.resize(total, 0);
+    if (++vis_epoch == 0) {
+      std::fill(vis.begin(), vis.end(), 0);
+      vis_epoch = 1;
+    }
+    vis[ep] = vis_epoch;
     std::priority_queue<std::pair<float, size_t>, std::vector<std::pair<float, size_t>>,
                         std::greater<std::pair<float, size_t>>> cands;
     MaxHeap res;
@@ -399,11 +410,10 @@ private:
       auto [cd, cid] = cands.top();
       if (cd > lb && res.size() >= ef) break;
       cands.pop();
-      std::shared_lock lk(*locks_[cid]);
       if (static_cast<int>(neighbors_[cid].size()) <= level) continue;
       for (size_t n : neighbors_[cid][level]) {
-        if (vis.count(n)) continue;
-        vis.insert(n);
+        if (vis[n] == vis_epoch) continue;
+        vis[n] = vis_epoch;
         float nd = dist(q, get_vec(n));
         if (res.size() < ef || nd < lb) {
           cands.emplace(nd, n);
@@ -438,10 +448,9 @@ private:
       if (ok) r.push_back(cid);
     }
     if (r.size() < M) {
-      std::unordered_set<size_t> sel(r.begin(), r.end());
       for (auto& p : sorted) {
         if (r.size() >= M) break;
-        if (!sel.count(p.second)) r.push_back(p.second);
+        if (std::find(r.begin(), r.end(), p.second) == r.end()) r.push_back(p.second);
       }
     }
     return r;
@@ -462,7 +471,6 @@ private:
   std::atomic<int> max_level_{-1};
   std::atomic<size_t> count_{0};
   mutable std::shared_mutex global_mtx_;
-  mutable std::vector<std::unique_ptr<std::shared_mutex>> locks_;
 };
 
 } // namespace quiverdb
