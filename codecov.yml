@@ -18,17 +18,15 @@ coverage:
         threshold: 1%
         base: auto
 
-# Ignore patterns - exclude test files, benchmarks, examples, and dependencies
 ignore:
-  - "tests/**/*"           # All test files
-  - "benchmarks/**/*"      # All benchmark files
-  - "examples/**/*"        # Example code
-  - "python/**/*"          # Python bindings (separate testing)
-  - "external/**/*"        # Third-party submodules
-  - "build/**/*"           # Build artifacts
-  - "**/_deps/**/*"        # CMake FetchContent dependencies
+  - "tests/**/*"
+  - "benchmarks/**/*"
+  - "examples/**/*"
+  - "python/**/*"
+  - "external/**/*"
+  - "build/**/*"
+  - "**/_deps/**/*"
 
-# Comment configuration - reduce noise on PRs
 comment:
   layout: "reach,diff,flags,tree,footer"
   behavior: default
@@ -36,8 +34,7 @@ comment:
   require_base: false
   require_head: true
 
-# Only measure coverage for source code in src/core/
-# This ensures test file changes don't affect coverage reports
+# Scope coverage measurement to library source (excludes tests/python/etc.).
 flags:
   core:
     paths:

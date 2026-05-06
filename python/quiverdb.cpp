@@ -19,14 +19,13 @@ PYBIND11_MODULE(quiverdb_py, m) {
     m.attr("VERSION_MINOR") = VERSION_MINOR;
     m.attr("VERSION_PATCH") = VERSION_PATCH;
 
-    // Bind DistanceMetric enum (canonical, used by all stores)
     py::enum_<DistanceMetric>(m, "DistanceMetric")
         .value("L2", DistanceMetric::L2)
         .value("COSINE", DistanceMetric::COSINE)
         .value("DOT", DistanceMetric::DOT)
         .export_values();
 
-    // HNSWDistanceMetric is now an alias for DistanceMetric
+    // Deprecated alias for backward compatibility.
     m.attr("HNSWDistanceMetric") = m.attr("DistanceMetric");
 
     // Bind HNSWIndex class

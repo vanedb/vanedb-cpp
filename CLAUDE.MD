@@ -69,7 +69,7 @@ store.add(id, vec);
 auto results = store.search(query, k);
 
 // HNSWIndex
-quiverdb::HNSWIndex idx(768, quiverdb::HNSWDistanceMetric::COSINE, 100000);
+quiverdb::HNSWIndex idx(768, quiverdb::DistanceMetric::COSINE, 100000);
 idx.add(id, vec);
 idx.save("index.bin");
 

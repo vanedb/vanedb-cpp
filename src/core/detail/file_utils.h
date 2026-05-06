@@ -16,8 +16,11 @@
 namespace quiverdb {
 namespace detail {
 
-/// Cross-platform fsync utility. Reopens file by path, flushes to disk, closes.
-/// No-op if the file cannot be opened (best-effort durability).
+/// Reopen a file by path, fsync to disk, close. Best-effort durability:
+/// silently no-ops if the file cannot be opened.
+///
+/// Caller must close any other writer (e.g. std::ofstream) for the same path
+/// before calling — Windows CreateFileA fails on an exclusively-held file.
 inline void fsync_file(const std::string& path) noexcept {
 #if defined(_WIN32) || defined(_WIN64)
   HANDLE hFile = CreateFileA(path.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL,

@@ -7,7 +7,6 @@
 #include <fstream>
 #include "core/distance_strategy.h"
 #include "core/detail/file_utils.h"
-#include "core/hnsw_index.h"  // For HNSWIndex::MIN_LEVEL_RANDOM
 
 using namespace quiverdb;
 
@@ -57,11 +56,6 @@ TEST_CASE("HNSWDistanceMetric is alias for DistanceMetric", "[distance_strategy]
 #elif defined(__GNUC__) || defined(__clang__)
 #  pragma GCC diagnostic pop
 #endif
-}
-
-TEST_CASE("Named constants have expected values", "[distance_strategy]") {
-  REQUIRE(COSINE_EPSILON == 1e-12f);
-  REQUIRE(HNSWIndex::MIN_LEVEL_RANDOM == 1e-9);
 }
 
 TEST_CASE("Explicit enum values are stable", "[distance_strategy]") {

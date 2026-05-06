@@ -58,7 +58,6 @@ public:
   static constexpr uint32_t VERSION = 2;  // v2: added RNG state serialization
   static constexpr int MAX_LEVEL = 32;  // Reasonable upper bound for HNSW levels
   static constexpr size_t INVALID_ID = static_cast<size_t>(-1);  // Sentinel for empty entry point
-  static constexpr double MIN_LEVEL_RANDOM = 1e-9;  // Clamp floor for level generation RNG
 
   explicit HNSWIndex(size_t dimension, DistanceMetric metric = DistanceMetric::L2,
       size_t max_elements = 100000, size_t M = 16, size_t ef_construction = 200, uint32_t seed = 42)
@@ -234,9 +233,7 @@ public:
       f.write(rng_state.data(), rng_state.size());
       f.flush();
       if (!f) { std::filesystem::remove(tmp); throw std::runtime_error("Write failed: " + tmp); }
-      // IMPORTANT: Close ofstream BEFORE reopening for fsync. On Windows, CreateFileA
-      // fails if the file is still open by ofstream (exclusive lock). This order is correct.
-      f.close();
+      f.close();  // close before fsync_file (see file_utils.h: Windows lock contract)
       detail::fsync_file(tmp);
       std::filesystem::rename(tmp, filename);
     } catch (...) { f.close(); std::filesystem::remove(tmp); throw; }
@@ -336,6 +333,7 @@ public:
   }
 
 private:
+  static constexpr double MIN_LEVEL_RANDOM = 1e-9;  // Clamp floor for level generation RNG
   using MaxHeap = std::priority_queue<std::pair<float, size_t>>;
 
   int get_level() {

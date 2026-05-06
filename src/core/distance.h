@@ -21,7 +21,7 @@
 
 namespace quiverdb {
 
-/// Named constant for cosine distance zero-norm threshold
+// Below this denominator (||a|| · ||b||) the vectors are treated as orthogonal.
 inline constexpr float COSINE_EPSILON = 1e-12f;
 
 #ifdef QUIVER_ARM_NEON

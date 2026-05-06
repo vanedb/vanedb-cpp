@@ -234,9 +234,7 @@ public:
     f.write(reinterpret_cast<const char*>(vectors_.data()), vectors_.size() * sizeof(float));
     f.flush();
     if (!f) { std::remove(tmp.c_str()); throw std::runtime_error("Write failed"); }
-    // IMPORTANT: Close ofstream BEFORE reopening for fsync. On Windows, CreateFileA
-    // fails if the file is still open by ofstream (exclusive lock). This order is correct.
-    f.close();
+    f.close();  // close before fsync_file (see file_utils.h: Windows lock contract)
     detail::fsync_file(tmp);
     if (std::rename(tmp.c_str(), filename.c_str()) != 0) {
       std::remove(tmp.c_str()); throw std::runtime_error("Rename failed");
