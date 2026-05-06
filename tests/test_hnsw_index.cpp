@@ -803,9 +803,7 @@ TEST_CASE("HNSWIndex - contains edge cases", "[hnsw]") {
 }
 
 TEST_CASE("HNSWIndex - search_layer epoch wrap", "[hnsw]") {
-  // The thread-local visited bitmap uses a uint16_t epoch counter that wraps
-  // every 65,536 searches. Run more than that to drive the wrap-and-reset
-  // branch, then confirm result correctness is preserved across the wrap.
+  // Drive >65k searches to exercise the visited-bitmap epoch wrap-and-reset.
   constexpr size_t dim = 4;
   constexpr size_t n = 32;
   quiverdb::HNSWIndex index(dim, quiverdb::HNSWDistanceMetric::L2, n);
