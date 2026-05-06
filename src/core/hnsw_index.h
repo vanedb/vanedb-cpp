@@ -388,10 +388,10 @@ private:
     static thread_local uint16_t vis_epoch = 0;
     const size_t total = count_.load(std::memory_order_relaxed);
     // Entry-point ID must be a live node. load() validates this for persisted
-    // indexes; a runtime check here also catches in-memory corruption or future
-    // call-site bugs (release builds strip asserts).
-    if (ep >= total) [[unlikely]]
-      throw std::logic_error("HNSWIndex::search_layer: entry point out of range");
+    // indexes; this hot-path guard also catches in-memory corruption or future
+    // call-site bugs. Defensive — unreachable by construction in tests.
+    if (ep >= total) [[unlikely]]  // LCOV_EXCL_LINE
+      throw std::logic_error("HNSWIndex::search_layer: entry point out of range");  // LCOV_EXCL_LINE
     if (vis.size() < total) vis.resize(total, 0);
     if (++vis_epoch == 0) {
       std::fill(vis.begin(), vis.end(), 0);
