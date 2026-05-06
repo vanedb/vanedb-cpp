@@ -49,7 +49,7 @@ auto results = store.search(query, 5);  // top-5 nearest neighbors
 ```cpp
 #include "core/hnsw_index.h"
 
-quiverdb::HNSWIndex index(768, quiverdb::HNSWDistanceMetric::COSINE, 100000);
+quiverdb::HNSWIndex index(768, quiverdb::DistanceMetric::COSINE, 100000);
 index.add(1, embedding);
 auto results = index.search(query, 5);
 index.save("index.bin");
@@ -59,7 +59,7 @@ index.save("index.bin");
 import quiverdb_py as quiverdb
 import numpy as np
 
-index = quiverdb.HNSWIndex(768, quiverdb.HNSWDistanceMetric.COSINE)
+index = quiverdb.HNSWIndex(768, quiverdb.DistanceMetric.COSINE)
 index.add(1, np.random.rand(768).astype(np.float32))
 ids, distances = index.search(query, 10)
 ```

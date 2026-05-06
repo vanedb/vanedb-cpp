@@ -30,7 +30,7 @@ TEST_CASE("DistanceComputer matches raw function calls", "[distance_strategy]") 
 
   SECTION("Dot") {
     DistanceComputer dc(DistanceMetric::DOT, dim);
-    float expected = negated_dot_product(a, b, dim);
+    float expected = detail::negated_dot_product(a, b, dim);
     REQUIRE(dc(a, b) == expected);
     REQUIRE(dc(a, b) == -dot_product(a, b, dim));
   }
@@ -38,8 +38,13 @@ TEST_CASE("DistanceComputer matches raw function calls", "[distance_strategy]") 
 
 TEST_CASE("HNSWDistanceMetric is alias for DistanceMetric", "[distance_strategy]") {
   // Compile-time check: these must be the same type (suppress deprecation for test)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#if defined(_MSC_VER)
+#  pragma warning(push)
+#  pragma warning(disable: 4996)
+#elif defined(__GNUC__) || defined(__clang__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
   static_assert(std::is_same_v<HNSWDistanceMetric, DistanceMetric>,
                 "HNSWDistanceMetric must be an alias for DistanceMetric");
 
@@ -47,7 +52,11 @@ TEST_CASE("HNSWDistanceMetric is alias for DistanceMetric", "[distance_strategy]
   REQUIRE(static_cast<int>(HNSWDistanceMetric::L2) == static_cast<int>(DistanceMetric::L2));
   REQUIRE(static_cast<int>(HNSWDistanceMetric::COSINE) == static_cast<int>(DistanceMetric::COSINE));
   REQUIRE(static_cast<int>(HNSWDistanceMetric::DOT) == static_cast<int>(DistanceMetric::DOT));
-#pragma GCC diagnostic pop
+#if defined(_MSC_VER)
+#  pragma warning(pop)
+#elif defined(__GNUC__) || defined(__clang__)
+#  pragma GCC diagnostic pop
+#endif
 }
 
 TEST_CASE("Named constants have expected values", "[distance_strategy]") {
@@ -77,18 +86,19 @@ TEST_CASE("detail::fsync_file does not crash", "[distance_strategy]") {
   }
 
   SECTION("on nonexistent path") {
-    REQUIRE_NOTHROW(detail::fsync_file("/nonexistent/path/should/not/crash"));
+    auto missing = std::filesystem::temp_directory_path() / "quiverdb_no_such_file_xyz123.tmp";
+    REQUIRE_NOTHROW(detail::fsync_file(missing.string()));
   }
 }
 
-TEST_CASE("negated_dot_product is correct", "[distance_strategy]") {
+TEST_CASE("detail::negated_dot_product is correct", "[distance_strategy]") {
   float a[] = {1.0f, 0.0f, 0.0f};
   float b[] = {0.0f, 1.0f, 0.0f};
-  REQUIRE(negated_dot_product(a, b, 3) == 0.0f);
+  REQUIRE(detail::negated_dot_product(a, b, 3) == 0.0f);
 
   float c[] = {1.0f, 2.0f, 3.0f};
   float d[] = {4.0f, 5.0f, 6.0f};
-  REQUIRE(negated_dot_product(c, d, 3) == -(1*4 + 2*5 + 3*6));
+  REQUIRE(detail::negated_dot_product(c, d, 3) == -(1*4 + 2*5 + 3*6));
 }
 
 TEST_CASE("resolve_distance_fn returns correct functions", "[distance_strategy]") {

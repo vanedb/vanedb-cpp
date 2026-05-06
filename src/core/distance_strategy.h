@@ -11,21 +11,24 @@ enum class DistanceMetric { L2 = 0, COSINE = 1, DOT = 2 };
 /// Backward-compatible alias: HNSWDistanceMetric is now DistanceMetric
 using HNSWDistanceMetric [[deprecated("Use DistanceMetric instead")]] = DistanceMetric;
 
-/// Negated dot product as a named function (used as distance for DOT metric)
-[[nodiscard]] inline float negated_dot_product(const float* a, const float* b, size_t n) noexcept {
-  return -dot_product(a, b, n);
-}
-
 /// Function pointer type for distance computation.
 /// Note: target functions must be declared noexcept (part of the type in C++17).
 using DistanceFn = float(*)(const float*, const float*, size_t) noexcept;
 
+namespace detail {
+/// Negated dot product, kept internal: used only as the DOT branch of
+/// resolve_distance_fn so the metric is a uniform "lower is closer".
+[[nodiscard]] inline float negated_dot_product(const float* a, const float* b, size_t n) noexcept {
+  return -dot_product(a, b, n);
+}
+} // namespace detail
+
 /// Resolves a DistanceMetric to its corresponding distance function pointer.
-[[nodiscard]] inline DistanceFn resolve_distance_fn(DistanceMetric metric) {
+[[nodiscard]] inline DistanceFn resolve_distance_fn(DistanceMetric metric) noexcept {
   switch (metric) {
     case DistanceMetric::L2:     return &l2_sq;
     case DistanceMetric::COSINE: return &cosine_distance;
-    case DistanceMetric::DOT:    return &negated_dot_product;
+    case DistanceMetric::DOT:    return &detail::negated_dot_product;
     default:                     return nullptr;
   }
 }
