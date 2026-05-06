@@ -388,7 +388,7 @@ private:
     static thread_local std::vector<uint16_t> vis;
     static thread_local uint16_t vis_epoch = 0;
     const size_t total = count_.load(std::memory_order_relaxed);
-    assert(ep < total);
+    assert(ep < total);  // entry-point ID must be a live node; load() validates this on deserialize
     if (vis.size() < total) vis.resize(total, 0);
     if (++vis_epoch == 0) {
       std::fill(vis.begin(), vis.end(), 0);
