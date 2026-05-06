@@ -806,7 +806,7 @@ TEST_CASE("HNSWIndex - search_layer epoch wrap", "[hnsw]") {
   // Drive >65k searches to exercise the visited-bitmap epoch wrap-and-reset.
   constexpr size_t dim = 4;
   constexpr size_t n = 32;
-  quiverdb::HNSWIndex index(dim, quiverdb::HNSWDistanceMetric::L2, n);
+  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, n);
   std::mt19937 gen(7);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
   for (size_t i = 0; i < n; ++i) {

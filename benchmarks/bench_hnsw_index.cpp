@@ -45,7 +45,7 @@ static void BM_HNSW_Insert(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     RandomData data(dim, count);
-    quiverdb::HNSWIndex index(dim, quiverdb::HNSWDistanceMetric::L2, count);
+    quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, count);
     state.ResumeTiming();
 
     for (size_t i = 0; i < count; ++i) {
@@ -71,7 +71,7 @@ static void BM_HNSW_Search(benchmark::State& state) {
 
   // Build index once
   RandomData data(dim, count);
-  quiverdb::HNSWIndex index(dim, quiverdb::HNSWDistanceMetric::L2, count, 16, 200);
+  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, count, 16, 200);
   for (size_t i = 0; i < count; ++i) {
     index.add(i, data.vector(i));
   }
@@ -130,7 +130,7 @@ static void BM_HNSW_Search_VaryingN(benchmark::State& state) {
 
   // Build index once
   RandomData data(dim, count);
-  quiverdb::HNSWIndex index(dim, quiverdb::HNSWDistanceMetric::L2, count, 16, 200);
+  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, count, 16, 200);
   for (size_t i = 0; i < count; ++i) {
     index.add(i, data.vector(i));
   }
@@ -161,7 +161,7 @@ static void BM_HNSW_Search_Dimension(benchmark::State& state) {
 
   // Build index once
   RandomData data(dim, count);
-  quiverdb::HNSWIndex index(dim, quiverdb::HNSWDistanceMetric::L2, count, 16, 200);
+  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, count, 16, 200);
   for (size_t i = 0; i < count; ++i) {
     index.add(i, data.vector(i));
   }

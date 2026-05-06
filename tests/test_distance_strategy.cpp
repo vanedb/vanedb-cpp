@@ -95,27 +95,30 @@ TEST_CASE("detail::negated_dot_product is correct", "[distance_strategy]") {
   REQUIRE(detail::negated_dot_product(c, d, 3) == -(1*4 + 2*5 + 3*6));
 }
 
-TEST_CASE("resolve_distance_fn returns correct functions", "[distance_strategy]") {
-  REQUIRE(resolve_distance_fn(DistanceMetric::L2) != nullptr);
-  REQUIRE(resolve_distance_fn(DistanceMetric::COSINE) != nullptr);
-  REQUIRE(resolve_distance_fn(DistanceMetric::DOT) != nullptr);
+TEST_CASE("detail::resolve_distance_fn matches direct calls for every metric", "[distance_strategy]") {
+  float a[] = {1.0f, 2.0f, 3.0f, 4.0f};
+  float b[] = {5.0f, 6.0f, 7.0f, 8.0f};
 
-  float a[] = {1.0f, 2.0f};
-  float b[] = {3.0f, 4.0f};
+  auto l2_fn = detail::resolve_distance_fn(DistanceMetric::L2);
+  REQUIRE(l2_fn != nullptr);
+  REQUIRE(l2_fn(a, b, 4) == l2_sq(a, b, 4));
 
-  auto l2_fn = resolve_distance_fn(DistanceMetric::L2);
-  REQUIRE(l2_fn(a, b, 2) == l2_sq(a, b, 2));
+  auto cos_fn = detail::resolve_distance_fn(DistanceMetric::COSINE);
+  REQUIRE(cos_fn != nullptr);
+  REQUIRE(cos_fn(a, b, 4) == cosine_distance(a, b, 4));
+
+  auto dot_fn = detail::resolve_distance_fn(DistanceMetric::DOT);
+  REQUIRE(dot_fn != nullptr);
+  REQUIRE(dot_fn(a, b, 4) == detail::negated_dot_product(a, b, 4));
 }
 
 TEST_CASE("resolve_distance_fn returns nullptr for invalid metric", "[distance_strategy]") {
-  auto fn = resolve_distance_fn(static_cast<DistanceMetric>(99));
-  REQUIRE(fn == nullptr);
+  REQUIRE(detail::resolve_distance_fn(static_cast<DistanceMetric>(99)) == nullptr);
+}
 
-  // DistanceComputer with invalid metric returns infinity
-  DistanceComputer dc(static_cast<DistanceMetric>(99), 4);
-  float a[] = {1.0f, 2.0f, 3.0f, 4.0f};
-  float b[] = {5.0f, 6.0f, 7.0f, 8.0f};
-  REQUIRE(std::isinf(dc(a, b)));
+TEST_CASE("DistanceComputer throws on invalid metric", "[distance_strategy]") {
+  REQUIRE_THROWS_AS(DistanceComputer(static_cast<DistanceMetric>(99), 4),
+                    std::invalid_argument);
 }
 
 TEST_CASE("DistanceComputer with zero dimension", "[distance_strategy]") {
