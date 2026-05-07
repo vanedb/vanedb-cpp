@@ -1,4 +1,4 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #include "core/distance.h"
 #include <benchmark/benchmark.h>
 #include <random>
@@ -12,7 +12,7 @@ static void BM_L2(benchmark::State& state) {
   for (size_t i = 0; i < dim; ++i) { a[i] = dis(gen); b[i] = dis(gen); }
 
   for (auto _ : state) {
-    benchmark::DoNotOptimize(quiverdb::l2_sq(a.data(), b.data(), dim));
+    benchmark::DoNotOptimize(vanedb::l2_sq(a.data(), b.data(), dim));
   }
   state.SetItemsProcessed(state.iterations() * dim);
   state.SetBytesProcessed(state.iterations() * dim * sizeof(float) * 2);
@@ -26,7 +26,7 @@ static void BM_DotProduct(benchmark::State& state) {
   for (size_t i = 0; i < dim; ++i) { a[i] = dis(gen); b[i] = dis(gen); }
 
   for (auto _ : state) {
-    benchmark::DoNotOptimize(quiverdb::dot_product(a.data(), b.data(), dim));
+    benchmark::DoNotOptimize(vanedb::dot_product(a.data(), b.data(), dim));
   }
   state.SetItemsProcessed(state.iterations() * dim);
   state.SetBytesProcessed(state.iterations() * dim * sizeof(float) * 2);
@@ -40,7 +40,7 @@ static void BM_Cosine(benchmark::State& state) {
   for (size_t i = 0; i < dim; ++i) { a[i] = dis(gen); b[i] = dis(gen); }
 
   for (auto _ : state) {
-    benchmark::DoNotOptimize(quiverdb::cosine_distance(a.data(), b.data(), dim));
+    benchmark::DoNotOptimize(vanedb::cosine_distance(a.data(), b.data(), dim));
   }
   state.SetItemsProcessed(state.iterations() * dim);
   state.SetBytesProcessed(state.iterations() * dim * sizeof(float) * 2);

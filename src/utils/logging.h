@@ -2,7 +2,7 @@
 
 /**
  * @file logging.h
- * @brief Lightweight structured logging for QuiverDB.
+ * @brief Lightweight structured logging for VaneDB.
  *
  * Simple, header-only logging utility that supports:
  * - Log levels (TRACE, DEBUG, INFO, WARN, ERROR)
@@ -11,11 +11,11 @@
  * - Thread-safe output
  *
  * Usage:
- *   QUIVERDB_LOG_INFO("Operation completed", "vectors", 1000, "latency_ms", 5.2);
- *   QUIVERDB_LOG_ERROR("Index failed", "reason", "dimension_mismatch");
+ *   VANEDB_LOG_INFO("Operation completed", "vectors", 1000, "latency_ms", 5.2);
+ *   VANEDB_LOG_ERROR("Index failed", "reason", "dimension_mismatch");
  *
- * To enable logging, define QUIVERDB_ENABLE_LOGGING before including this header.
- * Log level can be controlled via QUIVERDB_LOG_LEVEL (default: INFO).
+ * To enable logging, define VANEDB_ENABLE_LOGGING before including this header.
+ * Log level can be controlled via VANEDB_LOG_LEVEL (default: INFO).
  */
 
 #include <chrono>
@@ -26,7 +26,7 @@
 #include <sstream>
 #include <string>
 
-namespace quiverdb {
+namespace vanedb {
 namespace logging {
 
 /**
@@ -60,13 +60,13 @@ inline const char* level_to_string(Level level) {
  */
 inline Level& global_level() {
     static Level level =
-#if defined(QUIVERDB_LOG_LEVEL_TRACE)
+#if defined(VANEDB_LOG_LEVEL_TRACE)
         Level::TRACE;
-#elif defined(QUIVERDB_LOG_LEVEL_DEBUG)
+#elif defined(VANEDB_LOG_LEVEL_DEBUG)
         Level::DEBUG;
-#elif defined(QUIVERDB_LOG_LEVEL_WARN)
+#elif defined(VANEDB_LOG_LEVEL_WARN)
         Level::WARN;
-#elif defined(QUIVERDB_LOG_LEVEL_ERROR)
+#elif defined(VANEDB_LOG_LEVEL_ERROR)
         Level::ERROR;
 #else
         Level::INFO;
@@ -123,7 +123,7 @@ inline void format_kvs(std::ostringstream& ss, const char* key, const V& value, 
  */
 template <typename... Args>
 inline void log(Level level, const char* file, int line, const char* message, Args&&... args) {
-#ifdef QUIVERDB_ENABLE_LOGGING
+#ifdef VANEDB_ENABLE_LOGGING
     if (level < global_level()) {
         return;
     }
@@ -171,23 +171,23 @@ inline void log(Level level, const char* file, int line, const char* message, Ar
 }
 
 } // namespace logging
-} // namespace quiverdb
+} // namespace vanedb
 
 // Convenience macros
-#define QUIVERDB_LOG(level, msg, ...) \
-    ::quiverdb::logging::log(level, __FILE__, __LINE__, msg, ##__VA_ARGS__)
+#define VANEDB_LOG(level, msg, ...) \
+    ::vanedb::logging::log(level, __FILE__, __LINE__, msg, ##__VA_ARGS__)
 
-#define QUIVERDB_LOG_TRACE(msg, ...) \
-    QUIVERDB_LOG(::quiverdb::logging::Level::TRACE, msg, ##__VA_ARGS__)
+#define VANEDB_LOG_TRACE(msg, ...) \
+    VANEDB_LOG(::vanedb::logging::Level::TRACE, msg, ##__VA_ARGS__)
 
-#define QUIVERDB_LOG_DEBUG(msg, ...) \
-    QUIVERDB_LOG(::quiverdb::logging::Level::DEBUG, msg, ##__VA_ARGS__)
+#define VANEDB_LOG_DEBUG(msg, ...) \
+    VANEDB_LOG(::vanedb::logging::Level::DEBUG, msg, ##__VA_ARGS__)
 
-#define QUIVERDB_LOG_INFO(msg, ...) \
-    QUIVERDB_LOG(::quiverdb::logging::Level::INFO, msg, ##__VA_ARGS__)
+#define VANEDB_LOG_INFO(msg, ...) \
+    VANEDB_LOG(::vanedb::logging::Level::INFO, msg, ##__VA_ARGS__)
 
-#define QUIVERDB_LOG_WARN(msg, ...) \
-    QUIVERDB_LOG(::quiverdb::logging::Level::WARN, msg, ##__VA_ARGS__)
+#define VANEDB_LOG_WARN(msg, ...) \
+    VANEDB_LOG(::vanedb::logging::Level::WARN, msg, ##__VA_ARGS__)
 
-#define QUIVERDB_LOG_ERROR(msg, ...) \
-    QUIVERDB_LOG(::quiverdb::logging::Level::ERROR, msg, ##__VA_ARGS__)
+#define VANEDB_LOG_ERROR(msg, ...) \
+    VANEDB_LOG(::vanedb::logging::Level::ERROR, msg, ##__VA_ARGS__)

@@ -2,10 +2,10 @@
 
 /**
  * @file version.h
- * @brief QuiverDB version information.
+ * @brief VaneDB version information.
  */
 
-namespace quiverdb {
+namespace vanedb {
 
 /// Major version number
 constexpr int VERSION_MAJOR = 0;
@@ -27,4 +27,4 @@ constexpr int version_number() {
     return VERSION_MAJOR * 10000 + VERSION_MINOR * 100 + VERSION_PATCH;
 }
 
-} // namespace quiverdb
+} // namespace vanedb

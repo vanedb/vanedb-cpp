@@ -1,14 +1,14 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
 
 #if defined(_WIN32) || defined(_WIN64)
-#define QUIVERDB_WINDOWS 1
+#define VANEDB_WINDOWS 1
 #ifndef NOMINMAX
 #define NOMINMAX  // Prevent Windows.h from defining min/max macros
 #endif
 #include <windows.h>
 #else
-#define QUIVERDB_POSIX 1
+#define VANEDB_POSIX 1
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -31,7 +31,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace quiverdb {
+namespace vanedb {
 
 class MMapVectorStore {
 public:
@@ -40,7 +40,7 @@ public:
   static constexpr size_t HEADER_SIZE = 32;
 
   explicit MMapVectorStore(const std::string& filename) {
-#ifdef QUIVERDB_WINDOWS
+#ifdef VANEDB_WINDOWS
     file_handle_ = CreateFileA(filename.c_str(), GENERIC_READ, FILE_SHARE_READ,
                                nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file_handle_ == INVALID_HANDLE_VALUE) throw std::runtime_error("Cannot open: " + filename);
@@ -118,14 +118,14 @@ public:
   MMapVectorStore& operator=(const MMapVectorStore&) = delete;
 
   MMapVectorStore(MMapVectorStore&& o) noexcept :
-#ifdef QUIVERDB_WINDOWS
+#ifdef VANEDB_WINDOWS
     file_handle_(o.file_handle_), mapping_handle_(o.mapping_handle_),
 #else
     fd_(o.fd_),
 #endif
     mapped_(o.mapped_), file_size_(o.file_size_), dim_(o.dim_), num_vectors_(o.num_vectors_),
     metric_(o.metric_), dist_(o.dist_), ids_ptr_(o.ids_ptr_), vectors_ptr_(o.vectors_ptr_), id_map_(std::move(o.id_map_)) {
-#ifdef QUIVERDB_WINDOWS
+#ifdef VANEDB_WINDOWS
     o.file_handle_ = INVALID_HANDLE_VALUE; o.mapping_handle_ = nullptr;
 #else
     o.fd_ = -1;
@@ -136,7 +136,7 @@ public:
   MMapVectorStore& operator=(MMapVectorStore&& o) noexcept {
     if (this != &o) {
       cleanup();
-#ifdef QUIVERDB_WINDOWS
+#ifdef VANEDB_WINDOWS
       file_handle_ = o.file_handle_; mapping_handle_ = o.mapping_handle_;
       o.file_handle_ = INVALID_HANDLE_VALUE; o.mapping_handle_ = nullptr;
 #else
@@ -175,7 +175,7 @@ public:
 
 private:
   void cleanup() {
-#ifdef QUIVERDB_WINDOWS
+#ifdef VANEDB_WINDOWS
     if (mapped_) { UnmapViewOfFile(mapped_); mapped_ = nullptr; }
     if (mapping_handle_) { CloseHandle(mapping_handle_); mapping_handle_ = nullptr; }
     if (file_handle_ != INVALID_HANDLE_VALUE) { CloseHandle(file_handle_); file_handle_ = INVALID_HANDLE_VALUE; }
@@ -185,7 +185,7 @@ private:
 #endif
   }
 
-#ifdef QUIVERDB_WINDOWS
+#ifdef VANEDB_WINDOWS
   HANDLE file_handle_ = INVALID_HANDLE_VALUE;
   HANDLE mapping_handle_ = nullptr;
 #else
@@ -252,4 +252,4 @@ private:
   std::unordered_set<uint64_t> id_set_;
 };
 
-} // namespace quiverdb
+} // namespace vanedb

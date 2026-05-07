@@ -9,17 +9,17 @@ using Catch::Approx;
 
 TEST_CASE("MMapVectorStoreBuilder - construction", "[mmap][builder]") {
   SECTION("Valid dimension") {
-    REQUIRE_NOTHROW(quiverdb::MMapVectorStoreBuilder(768));
-    REQUIRE_NOTHROW(quiverdb::MMapVectorStoreBuilder(128, quiverdb::DistanceMetric::COSINE));
+    REQUIRE_NOTHROW(vanedb::MMapVectorStoreBuilder(768));
+    REQUIRE_NOTHROW(vanedb::MMapVectorStoreBuilder(128, vanedb::DistanceMetric::COSINE));
   }
 
   SECTION("Zero dimension throws") {
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStoreBuilder(0), std::invalid_argument);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStoreBuilder(0), std::invalid_argument);
   }
 }
 
 TEST_CASE("MMapVectorStoreBuilder - add vectors", "[mmap][builder]") {
-  quiverdb::MMapVectorStoreBuilder builder(3);
+  vanedb::MMapVectorStoreBuilder builder(3);
 
   SECTION("Add single vector") {
     float vec[] = {1.0f, 2.0f, 3.0f};
@@ -57,7 +57,7 @@ TEST_CASE("MMapVectorStore - save and load", "[mmap]") {
   std::filesystem::remove(filename);
 
   constexpr size_t dim = 4;
-  quiverdb::MMapVectorStoreBuilder builder(dim, quiverdb::DistanceMetric::L2);
+  vanedb::MMapVectorStoreBuilder builder(dim, vanedb::DistanceMetric::L2);
 
   // Add test vectors
   float vec1[] = {1.0f, 0.0f, 0.0f, 0.0f};
@@ -71,16 +71,16 @@ TEST_CASE("MMapVectorStore - save and load", "[mmap]") {
   SECTION("Save and load successfully") {
     REQUIRE_NOTHROW(builder.save(filename));
 
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     REQUIRE(store.size() == 3);
     REQUIRE(store.dimension() == dim);
-    REQUIRE(store.metric() == quiverdb::DistanceMetric::L2);
+    REQUIRE(store.metric() == vanedb::DistanceMetric::L2);
   }
 
   SECTION("Get vector by ID") {
     builder.save(filename);
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     const float* retrieved = store.get(10);
     REQUIRE(retrieved != nullptr);
@@ -92,14 +92,14 @@ TEST_CASE("MMapVectorStore - save and load", "[mmap]") {
 
   SECTION("Get non-existent ID returns nullptr") {
     builder.save(filename);
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     REQUIRE(store.get(999) == nullptr);
   }
 
   SECTION("Contains works correctly") {
     builder.save(filename);
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     REQUIRE(store.contains(10));
     REQUIRE(store.contains(20));
@@ -109,7 +109,7 @@ TEST_CASE("MMapVectorStore - save and load", "[mmap]") {
 
   SECTION("Search finds nearest neighbors") {
     builder.save(filename);
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     float query[] = {0.9f, 0.0f, 0.0f, 0.0f};
     auto results = store.search(query, 1);
@@ -120,7 +120,7 @@ TEST_CASE("MMapVectorStore - save and load", "[mmap]") {
 
   SECTION("Search with k > size returns all") {
     builder.save(filename);
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     float query[] = {0.0f, 0.0f, 0.0f, 0.0f};
     auto results = store.search(query, 100);
@@ -134,7 +134,7 @@ TEST_CASE("MMapVectorStore - save and load", "[mmap]") {
 
 TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
   SECTION("Non-existent file throws") {
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore("nonexistent_file.bin"), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore("nonexistent_file.bin"), std::runtime_error);
   }
 
   SECTION("Invalid magic throws") {
@@ -144,7 +144,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
       uint32_t bad_magic = 0xDEADBEEF;
       ofs.write(reinterpret_cast<const char*>(&bad_magic), sizeof(bad_magic));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -153,10 +153,10 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
     {
       std::ofstream ofs(filename, std::ios::binary);
       // Write only partial header
-      uint32_t magic = quiverdb::MMapVectorStore::MAGIC;
+      uint32_t magic = vanedb::MMapVectorStore::MAGIC;
       ofs.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -164,7 +164,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
     const std::string filename = "test_bad_metric.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::MMapVectorStore::MAGIC;
+      uint32_t magic = vanedb::MMapVectorStore::MAGIC;
       uint32_t version = 1;
       uint64_t dim = 3;  // Fixed: was uint32_t, should be uint64_t per file format
       uint64_t num_vectors = 0;
@@ -175,7 +175,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
       ofs.write(reinterpret_cast<const char*>(&num_vectors), sizeof(num_vectors));
       ofs.write(reinterpret_cast<const char*>(&bad_metric), sizeof(bad_metric));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -183,7 +183,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
     const std::string filename = "test_bad_version.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::MMapVectorStore::MAGIC;
+      uint32_t magic = vanedb::MMapVectorStore::MAGIC;
       uint32_t version = 99; // Unsupported version
       uint64_t dim = 3;
       uint64_t num_vectors = 0;
@@ -196,7 +196,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
       ofs.write(reinterpret_cast<const char*>(&metric), sizeof(metric));
       ofs.write(reinterpret_cast<const char*>(&reserved), sizeof(reserved));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -205,7 +205,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
     const std::string filename = "test_zero_dim.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::MMapVectorStore::MAGIC;
+      uint32_t magic = vanedb::MMapVectorStore::MAGIC;
       uint32_t version = 1;
       uint64_t dim = 0; // Zero dimension
       uint64_t num_vectors = 1; // Non-zero vectors
@@ -218,7 +218,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
       ofs.write(reinterpret_cast<const char*>(&metric), sizeof(metric));
       ofs.write(reinterpret_cast<const char*>(&reserved), sizeof(reserved));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -226,7 +226,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
     const std::string filename = "test_truncated_data.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::MMapVectorStore::MAGIC;
+      uint32_t magic = vanedb::MMapVectorStore::MAGIC;
       uint32_t version = 1;
       uint64_t dim = 4;
       uint64_t num_vectors = 10; // Claims 10 vectors but won't provide them
@@ -244,7 +244,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
       ofs.write(reinterpret_cast<const char*>(&id), sizeof(id));
       ofs.write(reinterpret_cast<const char*>(vec), sizeof(vec));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -252,7 +252,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
     const std::string filename = "test_overflow_num.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::MMapVectorStore::MAGIC;
+      uint32_t magic = vanedb::MMapVectorStore::MAGIC;
       uint32_t version = 1;
       uint64_t dim = 4;
       uint64_t num_vectors = SIZE_MAX; // Causes overflow
@@ -265,7 +265,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
       ofs.write(reinterpret_cast<const char*>(&metric), sizeof(metric));
       ofs.write(reinterpret_cast<const char*>(&reserved), sizeof(reserved));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -273,7 +273,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
     const std::string filename = "test_overflow_dim.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::MMapVectorStore::MAGIC;
+      uint32_t magic = vanedb::MMapVectorStore::MAGIC;
       uint32_t version = 1;
       uint64_t dim = SIZE_MAX; // Causes overflow
       uint64_t num_vectors = 1;
@@ -286,7 +286,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
       ofs.write(reinterpret_cast<const char*>(&metric), sizeof(metric));
       ofs.write(reinterpret_cast<const char*>(&reserved), sizeof(reserved));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -296,7 +296,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
     const std::string filename = "test_overflow_combined.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::MMapVectorStore::MAGIC;
+      uint32_t magic = vanedb::MMapVectorStore::MAGIC;
       uint32_t version = 1;
       // dim = SIZE_MAX/8 passes dim check (< SIZE_MAX/sizeof(float))
       // num_vectors = 3 passes num_vectors check (< SIZE_MAX/sizeof(uint64_t))
@@ -312,7 +312,7 @@ TEST_CASE("MMapVectorStore - error handling", "[mmap]") {
       ofs.write(reinterpret_cast<const char*>(&metric), sizeof(metric));
       ofs.write(reinterpret_cast<const char*>(&reserved), sizeof(reserved));
     }
-    REQUIRE_THROWS_AS(quiverdb::MMapVectorStore(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::MMapVectorStore(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 }
@@ -321,13 +321,13 @@ TEST_CASE("MMapVectorStore - search validation", "[mmap]") {
   const std::string filename = "test_mmap_search_validation.bin";
   std::filesystem::remove(filename);
 
-  quiverdb::MMapVectorStoreBuilder builder(4, quiverdb::DistanceMetric::L2);
+  vanedb::MMapVectorStoreBuilder builder(4, vanedb::DistanceMetric::L2);
   float vec[] = {1.0f, 0.0f, 0.0f, 0.0f};
   builder.add(1, vec);
   builder.save(filename);
 
   {
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     SECTION("Search with null query throws") {
       REQUIRE_THROWS_AS(store.search(nullptr, 1), std::invalid_argument);
@@ -349,7 +349,7 @@ TEST_CASE("MMapVectorStore - large scale", "[mmap][stress]") {
   constexpr size_t dim = 128;
   constexpr size_t num_vectors = 1000;
 
-  quiverdb::MMapVectorStoreBuilder builder(dim, quiverdb::DistanceMetric::COSINE);
+  vanedb::MMapVectorStoreBuilder builder(dim, vanedb::DistanceMetric::COSINE);
   builder.reserve(num_vectors);
 
   std::mt19937 gen(42);
@@ -367,7 +367,7 @@ TEST_CASE("MMapVectorStore - large scale", "[mmap][stress]") {
   builder.save(filename);
 
   SECTION("Load and search") {
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     REQUIRE(store.size() == num_vectors);
     REQUIRE(store.dimension() == dim);
@@ -382,7 +382,7 @@ TEST_CASE("MMapVectorStore - large scale", "[mmap][stress]") {
   }
 
   SECTION("Vectors are preserved") {
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     for (size_t i = 0; i < num_vectors; ++i) {
       const float* retrieved = store.get(i);
@@ -400,7 +400,7 @@ TEST_CASE("MMapVectorStore - cosine metric", "[mmap]") {
   const std::string filename = "test_mmap_cosine.bin";
   std::filesystem::remove(filename);
 
-  quiverdb::MMapVectorStoreBuilder builder(4, quiverdb::DistanceMetric::COSINE);
+  vanedb::MMapVectorStoreBuilder builder(4, vanedb::DistanceMetric::COSINE);
 
   // Same direction, different magnitudes
   float vec1[] = {1.0f, 0.0f, 0.0f, 0.0f};
@@ -413,7 +413,7 @@ TEST_CASE("MMapVectorStore - cosine metric", "[mmap]") {
   builder.save(filename);
 
   {
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     float query[] = {3.0f, 0.0f, 0.0f, 0.0f};
     auto results = store.search(query, 2);
@@ -432,7 +432,7 @@ TEST_CASE("MMapVectorStore - dot product metric", "[mmap]") {
   const std::string filename = "test_mmap_dot.bin";
   std::filesystem::remove(filename);
 
-  quiverdb::MMapVectorStoreBuilder builder(4, quiverdb::DistanceMetric::DOT);
+  vanedb::MMapVectorStoreBuilder builder(4, vanedb::DistanceMetric::DOT);
 
   float vec1[] = {1.0f, 0.0f, 0.0f, 0.0f};
   float vec2[] = {2.0f, 0.0f, 0.0f, 0.0f};  // Higher dot product
@@ -444,7 +444,7 @@ TEST_CASE("MMapVectorStore - dot product metric", "[mmap]") {
   builder.save(filename);
 
   {
-    quiverdb::MMapVectorStore store(filename);
+    vanedb::MMapVectorStore store(filename);
 
     float query[] = {1.0f, 0.0f, 0.0f, 0.0f};
     auto results = store.search(query, 1);

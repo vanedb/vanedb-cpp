@@ -1,6 +1,6 @@
-# QuiverDB Guide
+# VaneDB Guide
 
-Complete documentation for QuiverDB - the embeddable vector database for edge AI.
+Complete documentation for VaneDB - the embeddable vector database for edge AI.
 
 ## Table of Contents
 
@@ -41,13 +41,13 @@ float vec_a[768] = {/* ... */};
 float vec_b[768] = {/* ... */};
 
 // L2 squared distance (auto-selects SIMD implementation)
-float l2_dist = quiverdb::l2_sq(vec_a, vec_b, 768);
+float l2_dist = vanedb::l2_sq(vec_a, vec_b, 768);
 
 // Cosine distance (best for embeddings)
-float cos_dist = quiverdb::cosine_distance(vec_a, vec_b, 768);
+float cos_dist = vanedb::cosine_distance(vec_a, vec_b, 768);
 
 // Dot product (for maximum inner product search)
-float dot = quiverdb::dot_product(vec_a, vec_b, 768);
+float dot = vanedb::dot_product(vec_a, vec_b, 768);
 ```
 
 ### VectorStore (Brute-force k-NN)
@@ -56,7 +56,7 @@ float dot = quiverdb::dot_product(vec_a, vec_b, 768);
 #include "core/vector_store.h"
 
 // Create a store for 768-dimensional vectors using cosine distance
-quiverdb::VectorStore store(768, quiverdb::DistanceMetric::COSINE);
+vanedb::VectorStore store(768, vanedb::DistanceMetric::COSINE);
 
 // Add vectors with unique IDs
 float doc1[768] = {/* ... */};
@@ -82,7 +82,7 @@ For large datasets, use `HNSWIndex` for much faster search:
 #include "core/hnsw_index.h"
 
 // Create HNSW index
-quiverdb::HNSWIndex index(768, quiverdb::DistanceMetric::COSINE, 100000);
+vanedb::HNSWIndex index(768, vanedb::DistanceMetric::COSINE, 100000);
 
 // Add vectors
 index.add(1, doc1);
@@ -92,7 +92,7 @@ auto results = index.search(query, 5);
 
 // Save and Load
 index.save("my_index.bin");
-auto loaded_index = quiverdb::HNSWIndex::load("my_index.bin");
+auto loaded_index = vanedb::HNSWIndex::load("my_index.bin");
 ```
 
 ### MMapVectorStore (Memory-Mapped)
@@ -103,13 +103,13 @@ For datasets larger than RAM, use `MMapVectorStore` for zero-copy file access:
 #include "core/mmap_vector_store.h"
 
 // Build and save vectors to disk
-quiverdb::MMapVectorStoreBuilder builder(768, quiverdb::DistanceMetric::COSINE);
+vanedb::MMapVectorStoreBuilder builder(768, vanedb::DistanceMetric::COSINE);
 builder.add(1, doc1);
 builder.add(2, doc2);
 builder.save("vectors.bin");
 
 // Load with memory-mapping (zero-copy, instant load)
-quiverdb::MMapVectorStore store("vectors.bin");
+vanedb::MMapVectorStore store("vectors.bin");
 auto results = store.search(query, 5);
 ```
 
@@ -120,9 +120,9 @@ auto results = store.search(query, 5);
 ### Installation (from source)
 
 ```bash
-git clone https://github.com/tsvet01/quiverdb.git
-cd quiverdb
-cmake -B build -DCMAKE_BUILD_TYPE=Release -DQUIVERDB_BUILD_PYTHON=ON
+git clone https://github.com/tsvet01/vanedb.git
+cd vanedb
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DVANEDB_BUILD_PYTHON=ON
 cmake --build build --parallel
 
 export PYTHONPATH=$PWD/build:$PYTHONPATH
@@ -131,32 +131,32 @@ export PYTHONPATH=$PWD/build:$PYTHONPATH
 ### Usage
 
 ```python
-import quiverdb_py as quiverdb
+import vanedb_py as vanedb
 import numpy as np
 
 # Check version
-print(quiverdb.__version__)  # "0.1.0"
+print(vanedb.__version__)  # "0.1.0"
 
 # === HNSW Index (approximate, fastest for large datasets) ===
-index = quiverdb.HNSWIndex(128, quiverdb.DistanceMetric.COSINE)
+index = vanedb.HNSWIndex(128, vanedb.DistanceMetric.COSINE)
 vec = np.random.rand(128).astype(np.float32)
 index.add(1, vec)
 ids, dists = index.search(vec, 10)
 index.save("index.bin")
 
 # === VectorStore (exact k-NN, thread-safe) ===
-store = quiverdb.VectorStore(128, quiverdb.DistanceMetric.COSINE)
+store = vanedb.VectorStore(128, vanedb.DistanceMetric.COSINE)
 store.add(1, vec)
 store.add(2, np.random.rand(128).astype(np.float32))
 ids, dists = store.search(vec, 5)
 
 # === MMapVectorStore (memory-mapped, for large datasets) ===
-builder = quiverdb.MMapVectorStoreBuilder(128, quiverdb.DistanceMetric.L2)
+builder = vanedb.MMapVectorStoreBuilder(128, vanedb.DistanceMetric.L2)
 for i in range(1000):
     builder.add(i, np.random.rand(128).astype(np.float32))
 builder.save("vectors.bin")
 
-mmap_store = quiverdb.MMapVectorStore("vectors.bin")  # Instant load
+mmap_store = vanedb.MMapVectorStore("vectors.bin")  # Instant load
 ids, dists = mmap_store.search(vec, 10)
 ```
 
@@ -191,12 +191,12 @@ ctest --output-on-failure
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `QUIVERDB_BUILD_TESTS` | ON | Build test suite |
-| `QUIVERDB_BUILD_BENCHMARKS` | ON | Build benchmarks |
-| `QUIVERDB_BUILD_PYTHON` | ON | Build Python bindings |
-| `QUIVERDB_BUILD_EXAMPLES` | ON | Build examples |
-| `QUIVERDB_BUILD_METAL` | OFF | Build Metal GPU support (macOS) |
-| `QUIVERDB_BUILD_CUDA` | OFF | Build CUDA GPU support |
+| `VANEDB_BUILD_TESTS` | ON | Build test suite |
+| `VANEDB_BUILD_BENCHMARKS` | ON | Build benchmarks |
+| `VANEDB_BUILD_PYTHON` | ON | Build Python bindings |
+| `VANEDB_BUILD_EXAMPLES` | ON | Build examples |
+| `VANEDB_BUILD_METAL` | OFF | Build Metal GPU support (macOS) |
+| `VANEDB_BUILD_CUDA` | OFF | Build CUDA GPU support |
 
 ---
 
@@ -236,7 +236,7 @@ Supported ABIs: `arm64-v8a` (ARM NEON), `x86_64` (AVX2).
 ## Architecture
 
 ```
-quiverdb/
+vanedb/
 ├── src/core/
 │   ├── distance.h          # SIMD distance functions
 │   ├── vector_store.h      # Thread-safe brute-force store

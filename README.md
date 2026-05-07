@@ -1,11 +1,11 @@
 <div align="center">
 
-# QuiverDB
+# VaneDB
 
 **Embeddable vector database for edge AI**
 
-[![Build](https://github.com/tsvet01/quiverdb/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/tsvet01/quiverdb/actions/workflows/build-and-test.yml)
-[![codecov](https://codecov.io/gh/tsvet01/quiverdb/branch/main/graph/badge.svg)](https://codecov.io/gh/tsvet01/quiverdb)
+[![Build](https://github.com/tsvet01/vanedb/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/tsvet01/vanedb/actions/workflows/build-and-test.yml)
+[![codecov](https://codecov.io/gh/tsvet01/vanedb/branch/main/graph/badge.svg)](https://codecov.io/gh/tsvet01/vanedb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C.svg)](https://en.cppreference.com/w/cpp/20)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)](https://www.python.org/)
@@ -16,9 +16,9 @@
 
 Header-only C++20 vector database with SIMD acceleration. Runs on Linux, macOS, Windows, iOS, and Android.
 
-## Why QuiverDB?
+## Why VaneDB?
 
-| Feature | QuiverDB | FAISS | hnswlib | Pinecone |
+| Feature | VaneDB | FAISS | hnswlib | Pinecone |
 |---------|----------|-------|---------|----------|
 | Header-only | Yes | No | No | N/A |
 | Mobile/Edge | Native | No | Partial | No |
@@ -41,7 +41,7 @@ Header-only C++20 vector database with SIMD acceleration. Runs on Linux, macOS, 
 ```cpp
 #include "core/vector_store.h"
 
-quiverdb::VectorStore store(768, quiverdb::DistanceMetric::COSINE);
+vanedb::VectorStore store(768, vanedb::DistanceMetric::COSINE);
 store.add(1, embedding);
 auto results = store.search(query, 5);  // top-5 nearest neighbors
 ```
@@ -49,17 +49,17 @@ auto results = store.search(query, 5);  // top-5 nearest neighbors
 ```cpp
 #include "core/hnsw_index.h"
 
-quiverdb::HNSWIndex index(768, quiverdb::DistanceMetric::COSINE, 100000);
+vanedb::HNSWIndex index(768, vanedb::DistanceMetric::COSINE, 100000);
 index.add(1, embedding);
 auto results = index.search(query, 5);
 index.save("index.bin");
 ```
 
 ```python
-import quiverdb_py as quiverdb
+import vanedb_py as vanedb
 import numpy as np
 
-index = quiverdb.HNSWIndex(768, quiverdb.DistanceMetric.COSINE)
+index = vanedb.HNSWIndex(768, vanedb.DistanceMetric.COSINE)
 index.add(1, np.random.rand(768).astype(np.float32))
 ids, distances = index.search(query, 10)
 ```

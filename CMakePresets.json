@@ -47,10 +47,10 @@
       "description": "Development build with all targets",
       "inherits": "debug",
       "cacheVariables": {
-        "QUIVERDB_BUILD_TESTS": "ON",
-        "QUIVERDB_BUILD_BENCHMARKS": "ON",
-        "QUIVERDB_BUILD_EXAMPLES": "ON",
-        "QUIVERDB_BUILD_PYTHON": "ON"
+        "VANEDB_BUILD_TESTS": "ON",
+        "VANEDB_BUILD_BENCHMARKS": "ON",
+        "VANEDB_BUILD_EXAMPLES": "ON",
+        "VANEDB_BUILD_PYTHON": "ON"
       }
     },
     {
@@ -59,10 +59,10 @@
       "description": "Build only Python bindings",
       "inherits": "release",
       "cacheVariables": {
-        "QUIVERDB_BUILD_TESTS": "OFF",
-        "QUIVERDB_BUILD_BENCHMARKS": "OFF",
-        "QUIVERDB_BUILD_EXAMPLES": "OFF",
-        "QUIVERDB_BUILD_PYTHON": "ON"
+        "VANEDB_BUILD_TESTS": "OFF",
+        "VANEDB_BUILD_BENCHMARKS": "OFF",
+        "VANEDB_BUILD_EXAMPLES": "OFF",
+        "VANEDB_BUILD_PYTHON": "ON"
       }
     },
     {
@@ -73,7 +73,7 @@
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address",
-        "QUIVERDB_BUILD_PYTHON": "OFF"
+        "VANEDB_BUILD_PYTHON": "OFF"
       }
     },
     {
@@ -84,7 +84,7 @@
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fno-omit-frame-pointer",
         "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=undefined",
-        "QUIVERDB_BUILD_PYTHON": "OFF"
+        "VANEDB_BUILD_PYTHON": "OFF"
       }
     },
     {
@@ -95,7 +95,7 @@
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "--coverage -fprofile-arcs -ftest-coverage",
         "CMAKE_EXE_LINKER_FLAGS": "--coverage",
-        "QUIVERDB_BUILD_PYTHON": "OFF"
+        "VANEDB_BUILD_PYTHON": "OFF"
       }
     }
   ],

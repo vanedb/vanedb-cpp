@@ -125,7 +125,7 @@ jobs:
 
     - name: Configure and build with Python bindings
       run: |
-        cmake -B build -DCMAKE_BUILD_TYPE=Release -DQUIVERDB_BUILD_PYTHON=ON -DQUIVERDB_BUILD_TESTS=OFF -DQUIVERDB_BUILD_BENCHMARKS=OFF -DQUIVERDB_BUILD_EXAMPLES=OFF
+        cmake -B build -DCMAKE_BUILD_TYPE=Release -DVANEDB_BUILD_PYTHON=ON -DVANEDB_BUILD_TESTS=OFF -DVANEDB_BUILD_BENCHMARKS=OFF -DVANEDB_BUILD_EXAMPLES=OFF
 
     - name: Build
       run: |
@@ -161,7 +161,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_CXX_FLAGS="-fsanitize=${{ matrix.sanitizer }} -fno-omit-frame-pointer" \
           -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=${{ matrix.sanitizer }}" \
-          -DQUIVERDB_BUILD_PYTHON=OFF
+          -DVANEDB_BUILD_PYTHON=OFF
 
     - name: Build
       run: |
@@ -192,8 +192,8 @@ jobs:
       run: |
         cmake -B build \
           -DCMAKE_BUILD_TYPE=Debug \
-          -DQUIVERDB_COVERAGE=ON \
-          -DQUIVERDB_BUILD_PYTHON=OFF
+          -DVANEDB_COVERAGE=ON \
+          -DVANEDB_BUILD_PYTHON=OFF
 
     - name: Build
       run: |
@@ -240,7 +240,7 @@ jobs:
       run: |
         cmake -B build \
           -DCMAKE_BUILD_TYPE=Release \
-          -DQUIVERDB_BUILD_PYTHON=OFF
+          -DVANEDB_BUILD_PYTHON=OFF
 
     - name: Build
       run: cmake --build build --parallel
@@ -269,10 +269,10 @@ jobs:
           -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
           -DCMAKE_OSX_ARCHITECTURES=arm64 \
           -DCMAKE_BUILD_TYPE=Release \
-          -DQUIVERDB_BUILD_TESTS=OFF \
-          -DQUIVERDB_BUILD_BENCHMARKS=OFF \
-          -DQUIVERDB_BUILD_PYTHON=OFF \
-          -DQUIVERDB_BUILD_EXAMPLES=OFF \
+          -DVANEDB_BUILD_TESTS=OFF \
+          -DVANEDB_BUILD_BENCHMARKS=OFF \
+          -DVANEDB_BUILD_PYTHON=OFF \
+          -DVANEDB_BUILD_EXAMPLES=OFF \
           -GXcode
 
     - name: Build for iOS
@@ -309,10 +309,10 @@ jobs:
           -DANDROID_PLATFORM=android-24 \
           -DANDROID_STL=c++_shared \
           -DCMAKE_BUILD_TYPE=Release \
-          -DQUIVERDB_BUILD_TESTS=OFF \
-          -DQUIVERDB_BUILD_BENCHMARKS=OFF \
-          -DQUIVERDB_BUILD_PYTHON=OFF \
-          -DQUIVERDB_BUILD_EXAMPLES=OFF
+          -DVANEDB_BUILD_TESTS=OFF \
+          -DVANEDB_BUILD_BENCHMARKS=OFF \
+          -DVANEDB_BUILD_PYTHON=OFF \
+          -DVANEDB_BUILD_EXAMPLES=OFF
 
     - name: Build for Android
       run: |
@@ -321,7 +321,7 @@ jobs:
     - name: Verify Android binary
       run: |
         # Check that the build completed for Android ARM64
-        file build-android/libquiverdb* 2>/dev/null || echo "Header-only library - checking compilation succeeded"
+        file build-android/libvanedb* 2>/dev/null || echo "Header-only library - checking compilation succeeded"
         echo "Android arm64-v8a build completed successfully"
 
   android-x86_64-build:
@@ -349,10 +349,10 @@ jobs:
           -DANDROID_PLATFORM=android-24 \
           -DANDROID_STL=c++_shared \
           -DCMAKE_BUILD_TYPE=Release \
-          -DQUIVERDB_BUILD_TESTS=OFF \
-          -DQUIVERDB_BUILD_BENCHMARKS=OFF \
-          -DQUIVERDB_BUILD_PYTHON=OFF \
-          -DQUIVERDB_BUILD_EXAMPLES=OFF
+          -DVANEDB_BUILD_TESTS=OFF \
+          -DVANEDB_BUILD_BENCHMARKS=OFF \
+          -DVANEDB_BUILD_PYTHON=OFF \
+          -DVANEDB_BUILD_EXAMPLES=OFF
 
     - name: Build for Android x86_64
       run: |

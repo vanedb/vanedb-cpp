@@ -1,4 +1,4 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
 #include "distance_strategy.h"
 #include "detail/file_utils.h"
@@ -19,7 +19,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-namespace quiverdb {
+namespace vanedb {
 
 namespace detail {
 template <typename T> void write_bin(std::ofstream& f, const T& v) {
@@ -54,7 +54,7 @@ struct HNSWSearchResult {
 
 class HNSWIndex {
 public:
-  static constexpr uint32_t MAGIC = 0x51565244;  // "QVRD" (QuiverDB) in little-endian
+  static constexpr uint32_t MAGIC = 0x51565244;  // "QVRD" (VaneDB) in little-endian
   static constexpr uint32_t VERSION = 2;  // v2: added RNG state serialization
   static constexpr int MAX_LEVEL = 32;  // Reasonable upper bound for HNSW levels
   static constexpr size_t INVALID_ID = static_cast<size_t>(-1);  // Sentinel for empty entry point
@@ -445,4 +445,4 @@ private:
   mutable std::shared_mutex global_mtx_;
 };
 
-} // namespace quiverdb
+} // namespace vanedb

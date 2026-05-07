@@ -1,16 +1,16 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
 #include "distance.h"
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
 
-namespace quiverdb {
+namespace vanedb {
 
 enum class DistanceMetric { L2 = 0, COSINE = 1, DOT = 2 };
 
 using HNSWDistanceMetric
-    [[deprecated("Use quiverdb::DistanceMetric (core/distance_strategy.h). HNSWDistanceMetric is removed in v0.3.0.")]]
+    [[deprecated("Use vanedb::DistanceMetric (core/distance_strategy.h). HNSWDistanceMetric is removed in v0.3.0.")]]
     = DistanceMetric;
 
 // Default-constructed instances are invalid; operator() returns infinity.
@@ -52,4 +52,4 @@ private:
   bool valid_ = false;
 };
 
-} // namespace quiverdb
+} // namespace vanedb

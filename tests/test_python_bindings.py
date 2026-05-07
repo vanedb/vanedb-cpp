@@ -1,5 +1,5 @@
 """
-Python binding tests for QuiverDB HNSWIndex.
+Python binding tests for VaneDB HNSWIndex.
 
 Run with: uv run pytest tests/test_python_bindings.py -v
 """
@@ -12,34 +12,34 @@ import os
 
 def test_import():
     """Test that the module can be imported."""
-    import quiverdb_py
-    assert hasattr(quiverdb_py, 'HNSWIndex')
-    assert hasattr(quiverdb_py, 'HNSWDistanceMetric')
+    import vanedb_py
+    assert hasattr(vanedb_py, 'HNSWIndex')
+    assert hasattr(vanedb_py, 'HNSWDistanceMetric')
 
 
 def test_version():
     """Test that version info is accessible."""
-    import quiverdb_py
-    assert hasattr(quiverdb_py, '__version__')
-    assert isinstance(quiverdb_py.__version__, str)
-    assert quiverdb_py.__version__ == "0.1.0"
-    assert quiverdb_py.VERSION_MAJOR == 0
-    assert quiverdb_py.VERSION_MINOR == 1
-    assert quiverdb_py.VERSION_PATCH == 0
+    import vanedb_py
+    assert hasattr(vanedb_py, '__version__')
+    assert isinstance(vanedb_py.__version__, str)
+    assert vanedb_py.__version__ == "0.1.0"
+    assert vanedb_py.VERSION_MAJOR == 0
+    assert vanedb_py.VERSION_MINOR == 1
+    assert vanedb_py.VERSION_PATCH == 0
 
 
 def test_distance_metrics():
     """Test that distance metric enum values are accessible."""
-    import quiverdb_py
-    assert quiverdb_py.HNSWDistanceMetric.L2 is not None
-    assert quiverdb_py.HNSWDistanceMetric.COSINE is not None
-    assert quiverdb_py.HNSWDistanceMetric.DOT is not None
+    import vanedb_py
+    assert vanedb_py.HNSWDistanceMetric.L2 is not None
+    assert vanedb_py.HNSWDistanceMetric.COSINE is not None
+    assert vanedb_py.HNSWDistanceMetric.DOT is not None
 
 
 def test_create_index_default():
     """Test creating an index with default parameters."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=128)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=128)
     assert index.size() == 0
     assert index.dimension() == 128
     assert index.capacity() == 100000
@@ -47,10 +47,10 @@ def test_create_index_default():
 
 def test_create_index_custom():
     """Test creating an index with custom parameters."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(
         dimension=64,
-        metric=quiverdb_py.HNSWDistanceMetric.COSINE,
+        metric=vanedb_py.HNSWDistanceMetric.COSINE,
         max_elements=1000,
         M=32,
         ef_construction=100,
@@ -63,8 +63,8 @@ def test_create_index_custom():
 
 def test_add_single_vector():
     """Test adding a single vector."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
     index.add(1, vec)
@@ -76,8 +76,8 @@ def test_add_single_vector():
 
 def test_add_multiple_vectors():
     """Test adding multiple vectors."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     for i in range(100):
         vec = np.random.randn(4).astype(np.float32)
@@ -90,8 +90,8 @@ def test_add_multiple_vectors():
 
 def test_search_basic():
     """Test basic search functionality."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
     index.add(42, vec)
@@ -105,8 +105,8 @@ def test_search_basic():
 
 def test_search_knn():
     """Test k-nearest neighbor search."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     # Add 10 vectors
     for i in range(10):
@@ -125,8 +125,8 @@ def test_search_knn():
 
 def test_search_returns_numpy_arrays():
     """Test that search returns numpy arrays."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
     index.add(1, vec)
@@ -140,8 +140,8 @@ def test_search_returns_numpy_arrays():
 
 def test_get_vector():
     """Test retrieving a stored vector."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     original = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32)
     index.add(42, original)
@@ -155,8 +155,8 @@ def test_get_vector():
 
 def test_ef_search():
     """Test setting and getting ef_search parameter."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     # Default should be reasonable
     default_ef = index.get_ef_search()
@@ -169,10 +169,10 @@ def test_ef_search():
 
 def test_save_load(tmp_path):
     """Test saving and loading an index."""
-    import quiverdb_py
+    import vanedb_py
 
     # Create and populate index
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    index = vanedb_py.HNSWIndex(dimension=4)
     vectors = {}
     for i in range(10):
         vec = np.random.randn(4).astype(np.float32)
@@ -185,7 +185,7 @@ def test_save_load(tmp_path):
     assert os.path.exists(filepath)
 
     # Load from file
-    loaded = quiverdb_py.HNSWIndex.load(filepath)
+    loaded = vanedb_py.HNSWIndex.load(filepath)
 
     # Verify loaded index
     assert loaded.size() == 10
@@ -199,10 +199,10 @@ def test_save_load(tmp_path):
 
 def test_save_load_search_consistency(tmp_path):
     """Test that search results are consistent after save/load."""
-    import quiverdb_py
+    import vanedb_py
 
     # Create and populate index
-    index = quiverdb_py.HNSWIndex(dimension=8)
+    index = vanedb_py.HNSWIndex(dimension=8)
     np.random.seed(42)
     for i in range(100):
         vec = np.random.randn(8).astype(np.float32)
@@ -215,7 +215,7 @@ def test_save_load_search_consistency(tmp_path):
     # Save and load
     filepath = str(tmp_path / "test_index.bin")
     index.save(filepath)
-    loaded = quiverdb_py.HNSWIndex.load(filepath)
+    loaded = vanedb_py.HNSWIndex.load(filepath)
 
     # Search after load
     ids_after, dists_after = loaded.search(query, 10)
@@ -227,8 +227,8 @@ def test_save_load_search_consistency(tmp_path):
 
 def test_dimension_mismatch_add():
     """Test that adding wrong dimension vector raises error."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     wrong_dim = np.array([1.0, 2.0, 3.0], dtype=np.float32)  # 3 instead of 4
     with pytest.raises(RuntimeError, match="dimension mismatch"):
@@ -237,8 +237,8 @@ def test_dimension_mismatch_add():
 
 def test_dimension_mismatch_search():
     """Test that searching with wrong dimension query raises error."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     vec = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
     index.add(1, vec)
@@ -250,8 +250,8 @@ def test_dimension_mismatch_search():
 
 def test_2d_array_add_raises():
     """Test that adding a 2D array raises error."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=4)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=4)
 
     vec_2d = np.array([[1.0, 0.0, 0.0, 0.0]], dtype=np.float32)
     with pytest.raises(RuntimeError, match="1-dimensional"):
@@ -260,10 +260,10 @@ def test_2d_array_add_raises():
 
 def test_cosine_metric():
     """Test COSINE distance metric."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(
         dimension=4,
-        metric=quiverdb_py.HNSWDistanceMetric.COSINE
+        metric=vanedb_py.HNSWDistanceMetric.COSINE
     )
 
     # Same direction vectors should have distance ~0
@@ -281,10 +281,10 @@ def test_cosine_metric():
 
 def test_dot_metric():
     """Test DOT product metric."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(
         dimension=4,
-        metric=quiverdb_py.HNSWDistanceMetric.DOT
+        metric=vanedb_py.HNSWDistanceMetric.DOT
     )
 
     vec1 = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
@@ -302,8 +302,8 @@ def test_dot_metric():
 
 def test_large_scale():
     """Test with larger number of vectors."""
-    import quiverdb_py
-    index = quiverdb_py.HNSWIndex(dimension=128, max_elements=10000)
+    import vanedb_py
+    index = vanedb_py.HNSWIndex(dimension=128, max_elements=10000)
 
     np.random.seed(42)
     for i in range(1000):
@@ -327,15 +327,15 @@ def test_large_scale():
 
 def test_vector_store_import():
     """Test that VectorStore can be imported."""
-    import quiverdb_py
-    assert hasattr(quiverdb_py, 'VectorStore')
-    assert hasattr(quiverdb_py, 'DistanceMetric')
+    import vanedb_py
+    assert hasattr(vanedb_py, 'VectorStore')
+    assert hasattr(vanedb_py, 'DistanceMetric')
 
 
 def test_vector_store_basic():
     """Test basic VectorStore operations."""
-    import quiverdb_py
-    store = quiverdb_py.VectorStore(dimension=4)
+    import vanedb_py
+    store = vanedb_py.VectorStore(dimension=4)
 
     vec = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32)
     store.add(1, vec)
@@ -350,8 +350,8 @@ def test_vector_store_basic():
 
 def test_vector_store_search():
     """Test VectorStore search."""
-    import quiverdb_py
-    store = quiverdb_py.VectorStore(dimension=4, metric=quiverdb_py.DistanceMetric.L2)
+    import vanedb_py
+    store = vanedb_py.VectorStore(dimension=4, metric=vanedb_py.DistanceMetric.L2)
 
     store.add(1, np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32))
     store.add(2, np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32))
@@ -364,8 +364,8 @@ def test_vector_store_search():
 
 def test_vector_store_remove():
     """Test VectorStore remove operation."""
-    import quiverdb_py
-    store = quiverdb_py.VectorStore(dimension=4)
+    import vanedb_py
+    store = vanedb_py.VectorStore(dimension=4)
 
     store.add(1, np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32))
     assert store.size() == 1
@@ -379,19 +379,19 @@ def test_vector_store_remove():
 
 def test_mmap_store_import():
     """Test that MMapVectorStore can be imported."""
-    import quiverdb_py
-    assert hasattr(quiverdb_py, 'MMapVectorStore')
-    assert hasattr(quiverdb_py, 'MMapVectorStoreBuilder')
+    import vanedb_py
+    assert hasattr(vanedb_py, 'MMapVectorStore')
+    assert hasattr(vanedb_py, 'MMapVectorStoreBuilder')
 
 
 def test_mmap_store_build_and_load(tmp_path):
     """Test building and loading an mmap store."""
-    import quiverdb_py
+    import vanedb_py
 
     filepath = str(tmp_path / "test_mmap.bin")
 
     # Build
-    builder = quiverdb_py.MMapVectorStoreBuilder(dimension=4)
+    builder = vanedb_py.MMapVectorStoreBuilder(dimension=4)
     vec1 = np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32)
     vec2 = np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32)
     builder.add(10, vec1)
@@ -399,7 +399,7 @@ def test_mmap_store_build_and_load(tmp_path):
     builder.save(filepath)
 
     # Load
-    store = quiverdb_py.MMapVectorStore(filepath)
+    store = vanedb_py.MMapVectorStore(filepath)
     assert store.size() == 2
     assert store.dimension() == 4
     assert store.contains(10)
@@ -408,16 +408,16 @@ def test_mmap_store_build_and_load(tmp_path):
 
 def test_mmap_store_search(tmp_path):
     """Test MMapVectorStore search."""
-    import quiverdb_py
+    import vanedb_py
 
     filepath = str(tmp_path / "test_mmap_search.bin")
 
-    builder = quiverdb_py.MMapVectorStoreBuilder(dimension=4)
+    builder = vanedb_py.MMapVectorStoreBuilder(dimension=4)
     builder.add(1, np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float32))
     builder.add(2, np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32))
     builder.save(filepath)
 
-    store = quiverdb_py.MMapVectorStore(filepath)
+    store = vanedb_py.MMapVectorStore(filepath)
     query = np.array([0.9, 0.0, 0.0, 0.0], dtype=np.float32)
     ids, dists = store.search(query, 1)
 
@@ -426,16 +426,16 @@ def test_mmap_store_search(tmp_path):
 
 def test_mmap_store_zero_copy_get(tmp_path):
     """Test that MMapVectorStore get returns zero-copy array."""
-    import quiverdb_py
+    import vanedb_py
 
     filepath = str(tmp_path / "test_mmap_zerocopy.bin")
 
-    builder = quiverdb_py.MMapVectorStoreBuilder(dimension=4)
+    builder = vanedb_py.MMapVectorStoreBuilder(dimension=4)
     original = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32)
     builder.add(42, original)
     builder.save(filepath)
 
-    store = quiverdb_py.MMapVectorStore(filepath)
+    store = vanedb_py.MMapVectorStore(filepath)
     retrieved = store.get(42)
 
     assert retrieved is not None
