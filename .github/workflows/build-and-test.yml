@@ -47,9 +47,9 @@ jobs:
       with:
         path: |
           build/_deps
-        key: ${{ runner.os }}-${{ matrix.compiler }}-deps-${{ hashFiles('CMakeLists.txt') }}
+        key: ${{ runner.os }}-${{ matrix.compiler }}-vanedb-deps-${{ hashFiles('CMakeLists.txt') }}
         restore-keys: |
-          ${{ runner.os }}-${{ matrix.compiler }}-deps-
+          ${{ runner.os }}-${{ matrix.compiler }}-vanedb-deps-
 
     - name: Set up compiler (Unix)
       if: runner.os != 'Windows'
