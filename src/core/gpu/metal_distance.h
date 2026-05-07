@@ -1,10 +1,10 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #if TARGET_OS_MAC || TARGET_OS_IPHONE
-#define QUIVER_METAL 1
+#define VANE_METAL 1
 
 #import <Metal/Metal.h>
 #import <Foundation/Foundation.h>
@@ -12,7 +12,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace quiverdb {
+namespace vanedb {
 namespace gpu {
 
 enum class MetalMetric { L2, COSINE, DOT };
@@ -134,7 +134,7 @@ kernel void cs(device const float4* q[[buffer(0)]], device const float4* v[[buff
 inline bool metal_available() { return MetalCompute::get().ok(); }
 
 } // namespace gpu
-} // namespace quiverdb
+} // namespace vanedb
 
 #endif
 #endif

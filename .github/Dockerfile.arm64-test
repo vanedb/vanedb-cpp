@@ -13,7 +13,7 @@ COPY . .
 
 # Build
 RUN cmake -B build -DCMAKE_BUILD_TYPE=Release \
-    -DQUIVERDB_BUILD_PYTHON=OFF
+    -DVANEDB_BUILD_PYTHON=OFF
 RUN cmake --build build --parallel
 
 # Run tests

@@ -16,30 +16,30 @@ using Catch::Approx;
 
 TEST_CASE("HNSWIndex - construction", "[hnsw]") {
   SECTION("Valid construction") {
-    REQUIRE_NOTHROW(quiverdb::HNSWIndex(768));
-    REQUIRE_NOTHROW(quiverdb::HNSWIndex(128, quiverdb::DistanceMetric::COSINE));
-    REQUIRE_NOTHROW(quiverdb::HNSWIndex(64, quiverdb::DistanceMetric::L2, 10000, 32, 400));
+    REQUIRE_NOTHROW(vanedb::HNSWIndex(768));
+    REQUIRE_NOTHROW(vanedb::HNSWIndex(128, vanedb::DistanceMetric::COSINE));
+    REQUIRE_NOTHROW(vanedb::HNSWIndex(64, vanedb::DistanceMetric::L2, 10000, 32, 400));
   }
 
   SECTION("Zero dimension throws") {
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex(0), std::invalid_argument);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex(0), std::invalid_argument);
   }
 
   SECTION("Zero max_elements throws") {
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex(768, quiverdb::DistanceMetric::L2, 0), std::invalid_argument);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex(768, vanedb::DistanceMetric::L2, 0), std::invalid_argument);
   }
 
   SECTION("M < 2 throws") {
     // M=0 should throw
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex(768, quiverdb::DistanceMetric::L2, 1000, 0), std::invalid_argument);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex(768, vanedb::DistanceMetric::L2, 1000, 0), std::invalid_argument);
     // M=1 should throw
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex(768, quiverdb::DistanceMetric::L2, 1000, 1), std::invalid_argument);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex(768, vanedb::DistanceMetric::L2, 1000, 1), std::invalid_argument);
     // M=2 should succeed
-    REQUIRE_NOTHROW(quiverdb::HNSWIndex(768, quiverdb::DistanceMetric::L2, 1000, 2));
+    REQUIRE_NOTHROW(vanedb::HNSWIndex(768, vanedb::DistanceMetric::L2, 1000, 2));
   }
 
   SECTION("Check initial state") {
-    quiverdb::HNSWIndex index(768);
+    vanedb::HNSWIndex index(768);
     REQUIRE(index.size() == 0);
     REQUIRE(index.dimension() == 768);
     REQUIRE(index.capacity() == 100000);  // default
@@ -48,7 +48,7 @@ TEST_CASE("HNSWIndex - construction", "[hnsw]") {
 
 TEST_CASE("HNSWIndex - add and search", "[hnsw]") {
   constexpr size_t dim = 64;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, 1000);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, 1000);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
@@ -106,7 +106,7 @@ TEST_CASE("HNSWIndex - add and search", "[hnsw]") {
 
   SECTION("Index full throws") {
     constexpr size_t small_capacity = 5;
-    quiverdb::HNSWIndex small_index(dim, quiverdb::DistanceMetric::L2, small_capacity);
+    vanedb::HNSWIndex small_index(dim, vanedb::DistanceMetric::L2, small_capacity);
 
     std::vector<float> vec(dim, 1.0f);
     for (uint64_t i = 0; i < small_capacity; ++i) {
@@ -122,7 +122,7 @@ TEST_CASE("HNSWIndex - add and search", "[hnsw]") {
 TEST_CASE("HNSWIndex - search quality", "[hnsw]") {
   constexpr size_t dim = 32;
   constexpr size_t num_vectors = 500;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, num_vectors, 16, 100);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, num_vectors, 16, 100);
 
   std::mt19937 gen(123);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
@@ -171,7 +171,7 @@ TEST_CASE("HNSWIndex - search quality", "[hnsw]") {
 
     std::vector<std::pair<float, uint64_t>> ground_truth;
     for (uint64_t i = 0; i < num_vectors; ++i) {
-      float dist = quiverdb::l2_sq(query.data(), all_vectors[i].data(), dim);
+      float dist = vanedb::l2_sq(query.data(), all_vectors[i].data(), dim);
       ground_truth.emplace_back(dist, i);
     }
     std::sort(ground_truth.begin(), ground_truth.end());
@@ -210,7 +210,7 @@ TEST_CASE("HNSWIndex - distance metrics", "[hnsw]") {
   constexpr size_t dim = 8;
 
   SECTION("L2 distance") {
-    quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, 100);
+    vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, 100);
 
     std::vector<float> v1 = {1, 0, 0, 0, 0, 0, 0, 0};
     std::vector<float> v2 = {0, 1, 0, 0, 0, 0, 0, 0};
@@ -229,7 +229,7 @@ TEST_CASE("HNSWIndex - distance metrics", "[hnsw]") {
   }
 
   SECTION("Cosine distance") {
-    quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::COSINE, 100);
+    vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::COSINE, 100);
 
     std::vector<float> v1 = {1, 0, 0, 0, 0, 0, 0, 0};
     std::vector<float> v2 = {2, 0, 0, 0, 0, 0, 0, 0};  // Same direction, different magnitude
@@ -247,7 +247,7 @@ TEST_CASE("HNSWIndex - distance metrics", "[hnsw]") {
   }
 
   SECTION("Dot product (MIPS)") {
-    quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::DOT, 100);
+    vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::DOT, 100);
 
     std::vector<float> v1 = {1, 0, 0, 0, 0, 0, 0, 0};
     std::vector<float> v2 = {2, 0, 0, 0, 0, 0, 0, 0};  // Higher dot product
@@ -268,7 +268,7 @@ TEST_CASE("HNSWIndex - distance metrics", "[hnsw]") {
 TEST_CASE("HNSWIndex - stress test", "[hnsw][stress]") {
   constexpr size_t dim = 128;
   constexpr size_t num_vectors = 1000;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, num_vectors);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, num_vectors);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
@@ -298,7 +298,7 @@ TEST_CASE("HNSWIndex - stress test", "[hnsw][stress]") {
 TEST_CASE("HNSWIndex - concurrent search", "[hnsw][thread]") {
   constexpr size_t dim = 64;
   constexpr size_t num_vectors = 500;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, num_vectors);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, num_vectors);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
@@ -349,7 +349,7 @@ TEST_CASE("HNSWIndex - concurrent add and search", "[hnsw][thread]") {
   constexpr size_t dim = 32;
   constexpr size_t initial_vectors = 100;
   constexpr size_t max_elements = 1000;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, max_elements);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, max_elements);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
@@ -423,10 +423,10 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
   constexpr size_t max_elements = 100;
   constexpr size_t M = 8;
   constexpr size_t ef_construction = 50;
-  constexpr quiverdb::DistanceMetric metric = quiverdb::DistanceMetric::COSINE;
+  constexpr vanedb::DistanceMetric metric = vanedb::DistanceMetric::COSINE;
 
   // Create and populate an index
-  quiverdb::HNSWIndex original_index(dim, metric, max_elements, M, ef_construction);
+  vanedb::HNSWIndex original_index(dim, metric, max_elements, M, ef_construction);
   original_index.set_ef_search(30);
 
   std::mt19937 gen(1234);
@@ -446,9 +446,9 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
     REQUIRE_NOTHROW(original_index.save(filename));
 
     // Load into a new index
-    std::unique_ptr<quiverdb::HNSWIndex> loaded_index_ptr;
-    REQUIRE_NOTHROW(loaded_index_ptr = quiverdb::HNSWIndex::load(filename));
-    quiverdb::HNSWIndex& loaded_index = *loaded_index_ptr;
+    std::unique_ptr<vanedb::HNSWIndex> loaded_index_ptr;
+    REQUIRE_NOTHROW(loaded_index_ptr = vanedb::HNSWIndex::load(filename));
+    vanedb::HNSWIndex& loaded_index = *loaded_index_ptr;
 
     // Verify configuration parameters
     REQUIRE(loaded_index.dimension() == original_index.dimension());
@@ -459,8 +459,8 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
 
     // Verify search results are identical
     for (const auto& vec : test_vectors) {
-      std::vector<quiverdb::HNSWSearchResult> original_results = original_index.search(vec.data(), 5);
-      std::vector<quiverdb::HNSWSearchResult> loaded_results = loaded_index.search(vec.data(), 5);
+      std::vector<vanedb::HNSWSearchResult> original_results = original_index.search(vec.data(), 5);
+      std::vector<vanedb::HNSWSearchResult> loaded_results = loaded_index.search(vec.data(), 5);
 
       REQUIRE(original_results.size() == loaded_results.size());
       for (size_t i = 0; i < original_results.size(); ++i) {
@@ -472,7 +472,7 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
 
   SECTION("Loading from non-existent file throws") {
     std::filesystem::remove(filename); // Ensure file doesn't exist
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex::load(filename + "_nonexistent"), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex::load(filename + "_nonexistent"), std::runtime_error);
   }
 
   SECTION("Loading corrupted file - bad magic number") {
@@ -483,7 +483,7 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
       uint32_t bad_magic = 0xDEADBEEF;
       ofs.write(reinterpret_cast<const char*>(&bad_magic), sizeof(bad_magic));
     }
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex::load(corrupt_file), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex::load(corrupt_file), std::runtime_error);
     std::filesystem::remove(corrupt_file);
   }
 
@@ -497,7 +497,7 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
       ofs.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
       ofs.write(reinterpret_cast<const char*>(&bad_version), sizeof(bad_version));
     }
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex::load(corrupt_file), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex::load(corrupt_file), std::runtime_error);
     std::filesystem::remove(corrupt_file);
   }
 
@@ -512,7 +512,7 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
       ofs.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
       // Write partial data - this should fail on load
     }
-    REQUIRE_THROWS(quiverdb::HNSWIndex::load(filename));
+    REQUIRE_THROWS(vanedb::HNSWIndex::load(filename));
   }
 
   SECTION("Loading empty file") {
@@ -521,7 +521,7 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
       std::ofstream ofs(empty_file, std::ios::binary);
       // Empty file
     }
-    REQUIRE_THROWS(quiverdb::HNSWIndex::load(empty_file));
+    REQUIRE_THROWS(vanedb::HNSWIndex::load(empty_file));
     std::filesystem::remove(empty_file);
   }
 
@@ -546,7 +546,7 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
       std::ofstream ofs(corrupt_file, std::ios::binary);
       ofs.write(data.data(), data.size());
     }
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex::load(corrupt_file), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex::load(corrupt_file), std::runtime_error);
     std::filesystem::remove(corrupt_file);
   }
 
@@ -567,13 +567,13 @@ TEST_CASE("HNSWIndex - serialization", "[hnsw][serialization]") {
       std::ofstream ofs(corrupt_file, std::ios::binary);
       ofs.write(data.data(), data.size());
     }
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex::load(corrupt_file), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex::load(corrupt_file), std::runtime_error);
     std::filesystem::remove(corrupt_file);
   }
 
   SECTION("get_vector returns correct data after save/load") {
     original_index.save(filename);
-    auto loaded = quiverdb::HNSWIndex::load(filename);
+    auto loaded = vanedb::HNSWIndex::load(filename);
 
     // Verify vectors are preserved
     for (size_t i = 0; i < test_vectors.size(); ++i) {
@@ -597,7 +597,7 @@ TEST_CASE("HNSWIndex - recall benchmark", "[hnsw][.benchmark]") {
   constexpr size_t num_queries = 100;
   constexpr size_t k = 10;
 
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, num_vectors, 16, 200);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, num_vectors, 16, 200);
 
   std::mt19937 gen(123);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
@@ -626,7 +626,7 @@ TEST_CASE("HNSWIndex - recall benchmark", "[hnsw][.benchmark]") {
   for (size_t q = 0; q < num_queries; ++q) {
     std::vector<std::pair<float, uint64_t>> distances;
     for (uint64_t i = 0; i < num_vectors; ++i) {
-      float dist = quiverdb::l2_sq(queries[q].data(), all_vectors[i].data(), dim);
+      float dist = vanedb::l2_sq(queries[q].data(), all_vectors[i].data(), dim);
       distances.emplace_back(dist, i);
     }
     std::partial_sort(distances.begin(), distances.begin() + k, distances.end());
@@ -657,7 +657,7 @@ TEST_CASE("HNSWIndex - recall benchmark", "[hnsw][.benchmark]") {
 
 TEST_CASE("HNSWIndex - ef_search validation", "[hnsw]") {
   constexpr size_t dim = 16;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, 100);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, 100);
 
   SECTION("ef_search = 0 throws") {
     REQUIRE_THROWS_AS(index.set_ef_search(0), std::invalid_argument);
@@ -677,7 +677,7 @@ TEST_CASE("HNSWIndex - ef_search validation", "[hnsw]") {
 
 TEST_CASE("HNSWIndex - get_vector edge cases", "[hnsw]") {
   constexpr size_t dim = 8;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, 100);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, 100);
 
   SECTION("get_vector on non-existent ID throws") {
     REQUIRE_THROWS_AS(index.get_vector(42), std::runtime_error);
@@ -704,7 +704,7 @@ TEST_CASE("HNSWIndex - corrupted RNG state", "[hnsw][serialization]") {
   constexpr size_t dim = 8;
 
   // Create and save a valid index
-  quiverdb::HNSWIndex original(dim, quiverdb::DistanceMetric::L2, 50);
+  vanedb::HNSWIndex original(dim, vanedb::DistanceMetric::L2, 50);
   std::vector<float> vec(dim, 1.0f);
   original.add(1, vec.data());
   original.save(filename);
@@ -725,7 +725,7 @@ TEST_CASE("HNSWIndex - corrupted RNG state", "[hnsw][serialization]") {
       ofs.write(data.data(), corrupt_size);
       ofs.close();
 
-      REQUIRE_THROWS(quiverdb::HNSWIndex::load(corrupt_file));
+      REQUIRE_THROWS(vanedb::HNSWIndex::load(corrupt_file));
       std::filesystem::remove(corrupt_file);
     }
   }
@@ -738,8 +738,8 @@ TEST_CASE("HNSWIndex - corruption validation tests", "[hnsw][serialization]") {
     const std::string filename = "test_hnsw_bad_metric.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::HNSWIndex::MAGIC;
-      uint32_t version = quiverdb::HNSWIndex::VERSION;
+      uint32_t magic = vanedb::HNSWIndex::MAGIC;
+      uint32_t version = vanedb::HNSWIndex::VERSION;
       size_t dim = 8;
       uint32_t bad_metric = 99; // Invalid metric
       ofs.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
@@ -747,7 +747,7 @@ TEST_CASE("HNSWIndex - corruption validation tests", "[hnsw][serialization]") {
       ofs.write(reinterpret_cast<const char*>(&dim), sizeof(dim));
       ofs.write(reinterpret_cast<const char*>(&bad_metric), sizeof(bad_metric));
     }
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex::load(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex::load(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -755,8 +755,8 @@ TEST_CASE("HNSWIndex - corruption validation tests", "[hnsw][serialization]") {
     const std::string filename = "test_hnsw_bad_count.bin";
     {
       std::ofstream ofs(filename, std::ios::binary);
-      uint32_t magic = quiverdb::HNSWIndex::MAGIC;
-      uint32_t version = quiverdb::HNSWIndex::VERSION;
+      uint32_t magic = vanedb::HNSWIndex::MAGIC;
+      uint32_t version = vanedb::HNSWIndex::VERSION;
       size_t dim = 8;
       uint32_t metric = 0;
       size_t max_el = 10;  // max_elements = 10
@@ -776,7 +776,7 @@ TEST_CASE("HNSWIndex - corruption validation tests", "[hnsw][serialization]") {
       ofs.write(reinterpret_cast<const char*>(&mult), sizeof(mult));
       ofs.write(reinterpret_cast<const char*>(&cnt), sizeof(cnt));
     }
-    REQUIRE_THROWS_AS(quiverdb::HNSWIndex::load(filename), std::runtime_error);
+    REQUIRE_THROWS_AS(vanedb::HNSWIndex::load(filename), std::runtime_error);
     std::filesystem::remove(filename);
   }
 
@@ -784,7 +784,7 @@ TEST_CASE("HNSWIndex - corruption validation tests", "[hnsw][serialization]") {
 
 TEST_CASE("HNSWIndex - contains edge cases", "[hnsw]") {
   constexpr size_t dim = 8;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, 100);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, 100);
 
   SECTION("contains returns false for empty index") {
     REQUIRE_FALSE(index.contains(0));
@@ -806,7 +806,7 @@ TEST_CASE("HNSWIndex - search_layer epoch wrap", "[hnsw]") {
   // Drive >65k searches to exercise the visited-bitmap epoch wrap-and-reset.
   constexpr size_t dim = 4;
   constexpr size_t n = 32;
-  quiverdb::HNSWIndex index(dim, quiverdb::DistanceMetric::L2, n);
+  vanedb::HNSWIndex index(dim, vanedb::DistanceMetric::L2, n);
   std::mt19937 gen(7);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
   for (size_t i = 0; i < n; ++i) {

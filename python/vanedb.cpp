@@ -8,10 +8,10 @@
 #include "core/version.h"
 
 namespace py = pybind11;
-using namespace quiverdb;
+using namespace vanedb;
 
-PYBIND11_MODULE(quiverdb_py, m) {
-    m.doc() = "QuiverDB - Embeddable vector database for edge AI";
+PYBIND11_MODULE(vanedb_py, m) {
+    m.doc() = "VaneDB - Embeddable vector database for edge AI";
 
     // Version info
     m.attr("__version__") = VERSION_STRING;

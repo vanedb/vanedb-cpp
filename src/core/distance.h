@@ -1,4 +1,4 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
 #include <algorithm>
 #include <cassert>
@@ -7,10 +7,10 @@
 
 #if defined(__ARM_NEON) || defined(__aarch64__)
 #include <arm_neon.h>
-#define QUIVER_ARM_NEON
+#define VANE_ARM_NEON
 #elif defined(__AVX2__)
 #include <immintrin.h>
-#define QUIVER_AVX2
+#define VANE_AVX2
 #endif
 
 #if defined(_MSC_VER)
@@ -19,12 +19,12 @@
 #define RESTRICT __restrict__
 #endif
 
-namespace quiverdb {
+namespace vanedb {
 
 // Below this denominator (||a|| · ||b||) the vectors are treated as orthogonal.
 inline constexpr float COSINE_EPSILON = 1e-12f;
 
-#ifdef QUIVER_ARM_NEON
+#ifdef VANE_ARM_NEON
 [[nodiscard]] inline float hsum(float32x4_t v) noexcept {
 #if defined(__aarch64__)
   return vaddvq_f32(v);
@@ -35,7 +35,7 @@ inline constexpr float COSINE_EPSILON = 1e-12f;
 }
 #endif
 
-#ifdef QUIVER_AVX2
+#ifdef VANE_AVX2
 [[nodiscard]] inline float hsum(__m256 v) noexcept {
   __m128 lo = _mm256_castps256_ps128(v);
   __m128 hi = _mm256_extractf128_ps(v, 1);
@@ -51,14 +51,14 @@ inline constexpr float COSINE_EPSILON = 1e-12f;
   float sum = 0.0f;
   size_t i = 0;
 
-#ifdef QUIVER_ARM_NEON
+#ifdef VANE_ARM_NEON
   float32x4_t acc = vdupq_n_f32(0.0f);
   for (; i + 4 <= n; i += 4) {
     float32x4_t d = vsubq_f32(vld1q_f32(a + i), vld1q_f32(b + i));
     acc = vmlaq_f32(acc, d, d);
   }
   sum = hsum(acc);
-#elif defined(QUIVER_AVX2)
+#elif defined(VANE_AVX2)
   __m256 acc = _mm256_setzero_ps();
   for (; i + 8 <= n; i += 8) {
     __m256 d = _mm256_sub_ps(_mm256_loadu_ps(a + i), _mm256_loadu_ps(b + i));
@@ -79,12 +79,12 @@ inline constexpr float COSINE_EPSILON = 1e-12f;
   float sum = 0.0f;
   size_t i = 0;
 
-#ifdef QUIVER_ARM_NEON
+#ifdef VANE_ARM_NEON
   float32x4_t acc = vdupq_n_f32(0.0f);
   for (; i + 4 <= n; i += 4)
     acc = vmlaq_f32(acc, vld1q_f32(a + i), vld1q_f32(b + i));
   sum = hsum(acc);
-#elif defined(QUIVER_AVX2)
+#elif defined(VANE_AVX2)
   __m256 acc = _mm256_setzero_ps();
   for (; i + 8 <= n; i += 8)
     acc = _mm256_fmadd_ps(_mm256_loadu_ps(a + i), _mm256_loadu_ps(b + i), acc);
@@ -101,7 +101,7 @@ inline constexpr float COSINE_EPSILON = 1e-12f;
   float dot = 0.0f, na = 0.0f, nb = 0.0f;
   size_t i = 0;
 
-#ifdef QUIVER_ARM_NEON
+#ifdef VANE_ARM_NEON
   float32x4_t vdot = vdupq_n_f32(0.0f), vna = vdupq_n_f32(0.0f), vnb = vdupq_n_f32(0.0f);
   for (; i + 4 <= n; i += 4) {
     float32x4_t va = vld1q_f32(a + i), vb = vld1q_f32(b + i);
@@ -110,7 +110,7 @@ inline constexpr float COSINE_EPSILON = 1e-12f;
     vnb = vmlaq_f32(vnb, vb, vb);
   }
   dot = hsum(vdot); na = hsum(vna); nb = hsum(vnb);
-#elif defined(QUIVER_AVX2)
+#elif defined(VANE_AVX2)
   __m256 vdot = _mm256_setzero_ps(), vna = _mm256_setzero_ps(), vnb = _mm256_setzero_ps();
   for (; i + 8 <= n; i += 8) {
     __m256 va = _mm256_loadu_ps(a + i), vb = _mm256_loadu_ps(b + i);
@@ -133,4 +133,4 @@ inline constexpr float COSINE_EPSILON = 1e-12f;
   return 1.0f - std::clamp(sim, -1.0f, 1.0f);
 }
 
-} // namespace quiverdb
+} // namespace vanedb

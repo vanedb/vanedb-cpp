@@ -1,4 +1,4 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
 
 #include <string>
@@ -13,7 +13,7 @@
 #include <unistd.h>
 #endif
 
-namespace quiverdb {
+namespace vanedb {
 namespace detail {
 
 /// Reopen a file by path, fsync to disk, close. Best-effort durability:
@@ -33,4 +33,4 @@ inline void fsync_file(const std::string& path) noexcept {
 }
 
 } // namespace detail
-} // namespace quiverdb
+} // namespace vanedb

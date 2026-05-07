@@ -1,15 +1,15 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
 
 #ifdef __CUDACC__
-#define QUIVER_CUDA 1
+#define VANE_CUDA 1
 
 #include <cuda_runtime.h>
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
 
-namespace quiverdb {
+namespace vanedb {
 namespace gpu {
 
 #define CU_CHK(x) do{cudaError_t e=x;if(e)throw std::runtime_error(cudaGetErrorString(e));}while(0)
@@ -101,6 +101,6 @@ private:
 inline bool cuda_available() { return CudaCompute::get().ok(); }
 
 } // namespace gpu
-} // namespace quiverdb
+} // namespace vanedb
 
 #endif

@@ -1,5 +1,5 @@
 [project]
-name = "quiverdb"
+name = "vanedb"
 version = "0.1.0"
 description = "Embeddable vector database for edge AI and local-first applications"
 readme = "README.md"
@@ -35,10 +35,10 @@ cmake.build-type = "Release"
 wheel.py-api = "cp39"
 
 [tool.scikit-build.cmake.define]
-QUIVERDB_BUILD_TESTS = "OFF"
-QUIVERDB_BUILD_BENCHMARKS = "OFF"
-QUIVERDB_BUILD_EXAMPLES = "OFF"
-QUIVERDB_BUILD_PYTHON = "ON"
+VANEDB_BUILD_TESTS = "OFF"
+VANEDB_BUILD_BENCHMARKS = "OFF"
+VANEDB_BUILD_EXAMPLES = "OFF"
+VANEDB_BUILD_PYTHON = "ON"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -5,13 +5,13 @@
 #include <string>
 #include <iomanip>
 
-// Simple example demonstrating semantic search with quiverdb
+// Simple example demonstrating semantic search with vanedb
 int main() {
-  std::cout << "=== QuiverDB Semantic Search Example ===\n\n";
+  std::cout << "=== VaneDB Semantic Search Example ===\n\n";
 
   // Create a vector store for 384-dimensional embeddings (common for smaller models)
   const size_t dim = 384;
-  quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::COSINE);
+  vanedb::VectorStore store(dim, vanedb::DistanceMetric::COSINE);
 
   // Simulate document embeddings (in practice, these would come from an embedding model)
   std::mt19937 gen(42);
@@ -21,7 +21,7 @@ int main() {
   std::vector<std::string> documents = {
       "The quick brown fox jumps over the lazy dog",
       "Machine learning is a subset of artificial intelligence",
-      "QuiverDB is a fast vector database for edge devices",
+      "VaneDB is a fast vector database for edge devices",
       "C++ is a powerful programming language",
       "Vector databases enable semantic search capabilities"
   };
@@ -146,13 +146,13 @@ int main() {
   std::cout << "Vector dimension: " << store.dimension() << "\n";
   std::cout << "Distance metric: ";
   switch (store.metric()) {
-    case quiverdb::DistanceMetric::L2:
+    case vanedb::DistanceMetric::L2:
       std::cout << "L2 (Euclidean)\n";
       break;
-    case quiverdb::DistanceMetric::COSINE:
+    case vanedb::DistanceMetric::COSINE:
       std::cout << "Cosine\n";
       break;
-    case quiverdb::DistanceMetric::DOT:
+    case vanedb::DistanceMetric::DOT:
       std::cout << "Dot Product (MIPS)\n";
       break;
   }

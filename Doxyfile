@@ -1,6 +1,6 @@
-# Doxyfile for QuiverDB
+# Doxyfile for VaneDB
 
-PROJECT_NAME           = "QuiverDB"
+PROJECT_NAME           = "VaneDB"
 PROJECT_NUMBER         = "0.1.0"
 PROJECT_BRIEF          = "Embeddable vector database for edge AI"
 OUTPUT_DIRECTORY       = docs
@@ -33,7 +33,7 @@ REFERENCES_RELATION    = YES
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = NO
-PREDEFINED             = QUIVER_ARM_NEON QUIVER_AVX2
+PREDEFINED             = VANE_ARM_NEON VANE_AVX2
 
 # Diagrams
 HAVE_DOT               = NO

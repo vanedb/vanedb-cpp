@@ -9,24 +9,24 @@ using Catch::Approx;
 
 TEST_CASE("VectorStore - construction", "[vector_store]") {
   SECTION("Valid dimension") {
-    REQUIRE_NOTHROW(quiverdb::VectorStore(768));
-    REQUIRE_NOTHROW(quiverdb::VectorStore(128, quiverdb::DistanceMetric::COSINE));
+    REQUIRE_NOTHROW(vanedb::VectorStore(768));
+    REQUIRE_NOTHROW(vanedb::VectorStore(128, vanedb::DistanceMetric::COSINE));
   }
 
   SECTION("Zero dimension throws") {
-    REQUIRE_THROWS_AS(quiverdb::VectorStore(0), std::invalid_argument);
+    REQUIRE_THROWS_AS(vanedb::VectorStore(0), std::invalid_argument);
   }
 
   SECTION("Check initial state") {
-    quiverdb::VectorStore store(768);
+    vanedb::VectorStore store(768);
     REQUIRE(store.size() == 0);
     REQUIRE(store.dimension() == 768);
-    REQUIRE(store.metric() == quiverdb::DistanceMetric::L2);
+    REQUIRE(store.metric() == vanedb::DistanceMetric::L2);
   }
 }
 
 TEST_CASE("VectorStore - add vectors", "[vector_store]") {
-  quiverdb::VectorStore store(3);
+  vanedb::VectorStore store(3);
 
   SECTION("Add single vector") {
     float vec[] = {1.0f, 2.0f, 3.0f};
@@ -64,7 +64,7 @@ TEST_CASE("VectorStore - add vectors", "[vector_store]") {
 }
 
 TEST_CASE("VectorStore - get vectors", "[vector_store]") {
-  quiverdb::VectorStore store(3);
+  vanedb::VectorStore store(3);
 
   SECTION("Get existing vector") {
     float vec[] = {1.0f, 2.0f, 3.0f};
@@ -96,7 +96,7 @@ TEST_CASE("VectorStore - get vectors", "[vector_store]") {
 }
 
 TEST_CASE("VectorStore - remove vectors", "[vector_store]") {
-  quiverdb::VectorStore store(3);
+  vanedb::VectorStore store(3);
   float vec1[] = {1.0f, 2.0f, 3.0f};
   float vec2[] = {4.0f, 5.0f, 6.0f};
   float vec3[] = {7.0f, 8.0f, 9.0f};
@@ -127,7 +127,7 @@ TEST_CASE("VectorStore - remove vectors", "[vector_store]") {
 }
 
 TEST_CASE("VectorStore - clear", "[vector_store]") {
-  quiverdb::VectorStore store(3);
+  vanedb::VectorStore store(3);
   float vec1[] = {1.0f, 2.0f, 3.0f};
   float vec2[] = {4.0f, 5.0f, 6.0f};
 
@@ -141,7 +141,7 @@ TEST_CASE("VectorStore - clear", "[vector_store]") {
 }
 
 TEST_CASE("VectorStore - search with L2 distance", "[vector_store][search]") {
-  quiverdb::VectorStore store(3, quiverdb::DistanceMetric::L2);
+  vanedb::VectorStore store(3, vanedb::DistanceMetric::L2);
 
   // Add test vectors
   float vec1[] = {1.0f, 0.0f, 0.0f};
@@ -203,7 +203,7 @@ TEST_CASE("VectorStore - search with L2 distance", "[vector_store][search]") {
 }
 
 TEST_CASE("VectorStore - search with cosine distance", "[vector_store][search]") {
-  quiverdb::VectorStore store(3, quiverdb::DistanceMetric::COSINE);
+  vanedb::VectorStore store(3, vanedb::DistanceMetric::COSINE);
 
   // Add test vectors
   float vec1[] = {1.0f, 0.0f, 0.0f};
@@ -237,7 +237,7 @@ TEST_CASE("VectorStore - search with cosine distance", "[vector_store][search]")
 }
 
 TEST_CASE("VectorStore - search with dot product", "[vector_store][search]") {
-  quiverdb::VectorStore store(3, quiverdb::DistanceMetric::DOT);
+  vanedb::VectorStore store(3, vanedb::DistanceMetric::DOT);
 
   // Add test vectors
   float vec1[] = {1.0f, 0.0f, 0.0f};
@@ -260,7 +260,7 @@ TEST_CASE("VectorStore - search with dot product", "[vector_store][search]") {
 
 TEST_CASE("VectorStore - high dimensional vectors", "[vector_store][search]") {
   constexpr size_t dim = 768;
-  quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::COSINE);
+  vanedb::VectorStore store(dim, vanedb::DistanceMetric::COSINE);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(0.0f, 1.0f);
@@ -306,7 +306,7 @@ TEST_CASE("VectorStore - high dimensional vectors", "[vector_store][search]") {
 }
 
 TEST_CASE("VectorStore - update vector", "[vector_store]") {
-  quiverdb::VectorStore store(3);
+  vanedb::VectorStore store(3);
   float vec1[] = {1.0f, 2.0f, 3.0f};
   float vec2[] = {4.0f, 5.0f, 6.0f};
 
@@ -332,7 +332,7 @@ TEST_CASE("VectorStore - update vector", "[vector_store]") {
 }
 
 TEST_CASE("VectorStore - reserve", "[vector_store]") {
-  quiverdb::VectorStore store(3);
+  vanedb::VectorStore store(3);
 
   SECTION("Reserve space") {
     REQUIRE_NOTHROW(store.reserve(100));
@@ -350,7 +350,7 @@ TEST_CASE("VectorStore - reserve", "[vector_store]") {
 
 TEST_CASE("VectorStore - stress test", "[vector_store][stress]") {
   constexpr size_t dim = 128;
-  quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::L2);
+  vanedb::VectorStore store(dim, vanedb::DistanceMetric::L2);
 
   std::mt19937 gen(12345);
   std::uniform_real_distribution<float> dis(-1.0f, 1.0f);
@@ -387,7 +387,7 @@ TEST_CASE("VectorStore - stress test", "[vector_store][stress]") {
 
 TEST_CASE("VectorStore - concurrent access", "[vector_store][thread]") {
   constexpr size_t dim = 64;
-  quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::L2);
+  vanedb::VectorStore store(dim, vanedb::DistanceMetric::L2);
 
   SECTION("Concurrent reads are safe") {
     // Pre-populate store

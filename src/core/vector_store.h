@@ -1,4 +1,4 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
 #include "distance_strategy.h"
 #include <algorithm>
@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace quiverdb {
+namespace vanedb {
 
 struct SearchResult {
   uint64_t id;
@@ -124,4 +124,4 @@ private:
   mutable std::shared_mutex mutex_;
 };
 
-} // namespace quiverdb
+} // namespace vanedb

@@ -1,4 +1,4 @@
-# quiverdb
+# vanedb
 
 ## Overview
 Embeddable vector database for edge AI. Header-only C++20, SIMD-optimized, cross-platform.
@@ -61,28 +61,27 @@ cd build && ctest --output-on-failure
 ## API
 ```cpp
 // Distance
-float d = quiverdb::l2_sq(a, b, dim);
+float d = vanedb::l2_sq(a, b, dim);
 
 // VectorStore
-quiverdb::VectorStore store(768, quiverdb::DistanceMetric::COSINE);
+vanedb::VectorStore store(768, vanedb::DistanceMetric::COSINE);
 store.add(id, vec);
 auto results = store.search(query, k);
 
 // HNSWIndex
-quiverdb::HNSWIndex idx(768, quiverdb::DistanceMetric::COSINE, 100000);
+vanedb::HNSWIndex idx(768, vanedb::DistanceMetric::COSINE, 100000);
 idx.add(id, vec);
 idx.save("index.bin");
 
 // GPU (Metal)
-auto& gpu = quiverdb::gpu::MetalCompute::get();
+auto& gpu = vanedb::gpu::MetalCompute::get();
 auto buf = gpu.upload(vectors, n, dim);
-auto dists = gpu.search(query, buf, dim, n, quiverdb::gpu::MetalMetric::L2);
+auto dists = gpu.search(query, buf, dim, n, vanedb::gpu::MetalMetric::L2);
 ```
 
 ## Demo: Obsidian Semantic Search
-Location: `/Users/anton/code/search/`
 
-A working semantic search tool built on QuiverDB demonstrating real-world usage:
+A working semantic search tool built on VaneDB demonstrating real-world usage:
 ```bash
 python3 search.py index ~/path/to/vault   # Index notes
 python3 search.py find "your query"       # Search
@@ -92,7 +91,7 @@ python3 search.py interactive             # REPL mode
 ## Roadmap
 
 ### Near-term (v0.2.0)
-- [ ] PyPI package distribution (`pip install quiverdb`)
+- [ ] PyPI package distribution (`pip install vanedb`)
 - [ ] Incremental index updates (add/remove without full rebuild)
 - [ ] Batch search API (multiple queries in one call)
 - [ ] Metadata/filtering support (search with constraints)

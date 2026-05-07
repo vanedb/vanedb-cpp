@@ -1,4 +1,4 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <cmath>
@@ -8,7 +8,7 @@
 #include "core/distance_strategy.h"
 #include "core/detail/file_utils.h"
 
-using namespace quiverdb;
+using namespace vanedb;
 
 TEST_CASE("DistanceComputer matches raw function calls", "[distance_strategy]") {
   const size_t dim = 4;
@@ -69,14 +69,14 @@ TEST_CASE("Default DistanceComputer returns infinity", "[distance_strategy]") {
 
 TEST_CASE("detail::fsync_file does not crash", "[distance_strategy]") {
   SECTION("on valid file") {
-    auto tmp = std::filesystem::temp_directory_path() / "quiverdb_fsync_test.tmp";
+    auto tmp = std::filesystem::temp_directory_path() / "vanedb_fsync_test.tmp";
     { std::ofstream f(tmp, std::ios::binary); f << "test"; }
     REQUIRE_NOTHROW(detail::fsync_file(tmp.string()));
     std::filesystem::remove(tmp);
   }
 
   SECTION("on nonexistent path") {
-    auto missing = std::filesystem::temp_directory_path() / "quiverdb_no_such_file_xyz123.tmp";
+    auto missing = std::filesystem::temp_directory_path() / "vanedb_no_such_file_xyz123.tmp";
     REQUIRE_NOTHROW(detail::fsync_file(missing.string()));
   }
 }

@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in QuiverDB, please report it responsibly:
+If you discover a security vulnerability in VaneDB, please report it responsibly:
 
 1. **Do NOT open a public GitHub issue** for security vulnerabilities
 2. **Email the maintainer** at **security@tsvetkov.org** (or open a private security advisory on GitHub)
@@ -47,7 +47,7 @@ If you discover a security vulnerability in QuiverDB, please report it responsib
 
 ## Security Measures
 
-QuiverDB implements several security measures:
+VaneDB implements several security measures:
 
 - **Input validation**: All public APIs validate inputs
 - **Bounds checking**: Array accesses are bounds-checked

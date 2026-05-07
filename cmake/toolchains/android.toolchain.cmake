@@ -1,8 +1,8 @@
-# Android NDK Toolchain for QuiverDB
+# Android NDK Toolchain for VaneDB
 # Usage: cmake -B build-android -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/android.toolchain.cmake
 #
 # Requires: ANDROID_NDK environment variable or -DANDROID_NDK=/path/to/ndk
-# The NDK includes its own toolchain file which this wraps with QuiverDB defaults
+# The NDK includes its own toolchain file which this wraps with VaneDB defaults
 
 # Minimum Android API level (Android 7.0 Nougat)
 set(ANDROID_PLATFORM "android-24" CACHE STRING "Android API level")
@@ -42,24 +42,24 @@ else()
     message(FATAL_ERROR "NDK toolchain file not found: ${NDK_TOOLCHAIN_FILE}")
 endif()
 
-# QuiverDB-specific settings
+# VaneDB-specific settings
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Disable unsupported features for Android builds
-set(QUIVERDB_BUILD_TESTS OFF CACHE BOOL "Disable tests for Android")
-set(QUIVERDB_BUILD_BENCHMARKS OFF CACHE BOOL "Disable benchmarks for Android")
-set(QUIVERDB_BUILD_PYTHON OFF CACHE BOOL "Disable Python for Android")
-set(QUIVERDB_BUILD_EXAMPLES OFF CACHE BOOL "Disable examples for Android")
+set(VANEDB_BUILD_TESTS OFF CACHE BOOL "Disable tests for Android")
+set(VANEDB_BUILD_BENCHMARKS OFF CACHE BOOL "Disable benchmarks for Android")
+set(VANEDB_BUILD_PYTHON OFF CACHE BOOL "Disable Python for Android")
+set(VANEDB_BUILD_EXAMPLES OFF CACHE BOOL "Disable examples for Android")
 
 # Enable NEON for arm64-v8a
 if(ANDROID_ABI STREQUAL "arm64-v8a")
-    add_compile_definitions(QUIVER_ARM_NEON=1)
+    add_compile_definitions(VANE_ARM_NEON=1)
 elseif(ANDROID_ABI STREQUAL "x86_64")
-    add_compile_definitions(QUIVER_AVX2=1)
+    add_compile_definitions(VANE_AVX2=1)
 endif()
 
-message(STATUS "QuiverDB Android toolchain loaded")
+message(STATUS "VaneDB Android toolchain loaded")
 message(STATUS "  NDK: ${ANDROID_NDK}")
 message(STATUS "  ABI: ${ANDROID_ABI}")
 message(STATUS "  Platform: ${ANDROID_PLATFORM}")

@@ -1,4 +1,4 @@
-// QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+// VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #import <Foundation/Foundation.h>
 #include "core/gpu/metal_distance.h"
 #include "core/distance.h"
@@ -8,7 +8,7 @@
 #include <random>
 #include <vector>
 
-using namespace quiverdb;
+using namespace vanedb;
 using namespace std::chrono;
 
 bool approx(float a, float b, float eps = 1e-4f) { return std::abs(a - b) < eps; }
@@ -89,7 +89,7 @@ void bench_persistent() {
 }
 
 int main() {
-  std::cout << "QuiverDB Metal GPU Tests\n========================\n";
+  std::cout << "VaneDB Metal GPU Tests\n========================\n";
   std::cout << "Metal: " << (gpu::metal_available() ? "YES" : "NO") << "\n\n";
   test_correctness();
   bench_persistent();

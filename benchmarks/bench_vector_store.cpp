@@ -14,7 +14,7 @@ static void BM_VectorStore_Add(benchmark::State &state) {
 
   for (auto _ : state) {
     state.PauseTiming();
-    quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::L2);
+    vanedb::VectorStore store(dim, vanedb::DistanceMetric::L2);
     std::vector<float> vec(dim);
     for (size_t i = 0; i < dim; ++i) {
       vec[i] = dis(gen);
@@ -44,7 +44,7 @@ static void BM_VectorStore_Search_L2(benchmark::State &state) {
   const size_t num_vectors = state.range(0);
   const size_t k = 10;
 
-  quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::L2);
+  vanedb::VectorStore store(dim, vanedb::DistanceMetric::L2);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(0.0f, 1.0f);
@@ -89,7 +89,7 @@ static void BM_VectorStore_Search_Cosine(benchmark::State &state) {
   const size_t num_vectors = state.range(0);
   const size_t k = 10;
 
-  quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::COSINE);
+  vanedb::VectorStore store(dim, vanedb::DistanceMetric::COSINE);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(0.0f, 1.0f);
@@ -134,7 +134,7 @@ static void BM_VectorStore_Search_VaryingK(benchmark::State &state) {
   const size_t num_vectors = 1000;
   const size_t k = state.range(0);
 
-  quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::L2);
+  vanedb::VectorStore store(dim, vanedb::DistanceMetric::L2);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(0.0f, 1.0f);
@@ -179,7 +179,7 @@ static void BM_VectorStore_Search_VaryingDim(benchmark::State &state) {
   const size_t num_vectors = 1000;
   const size_t k = 10;
 
-  quiverdb::VectorStore store(dim, quiverdb::DistanceMetric::L2);
+  vanedb::VectorStore store(dim, vanedb::DistanceMetric::L2);
 
   std::mt19937 gen(42);
   std::uniform_real_distribution<float> dis(0.0f, 1.0f);
