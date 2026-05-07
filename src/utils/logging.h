@@ -15,7 +15,7 @@
  *   VANEDB_LOG_ERROR("Index failed", "reason", "dimension_mismatch");
  *
  * To enable logging, define VANEDB_ENABLE_LOGGING before including this header.
- * Log level can be controlled via VANEDB_LOG_LEVEL (default: INFO).
+ * Log level can be controlled via VANEDB_LOG_LEVEL_<LEVEL> macros (e.g., VANEDB_LOG_LEVEL_DEBUG; default: INFO).
  */
 
 #include <chrono>

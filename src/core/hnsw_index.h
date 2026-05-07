@@ -54,7 +54,7 @@ struct HNSWSearchResult {
 
 class HNSWIndex {
 public:
-  static constexpr uint32_t MAGIC = 0x51565244;  // "QVRD" (VaneDB) in little-endian
+  static constexpr uint32_t MAGIC = 0x51565244;  // "QVRD" (legacy QuiverDB magic, retained for on-disk compat)
   static constexpr uint32_t VERSION = 2;  // v2: added RNG state serialization
   static constexpr int MAX_LEVEL = 32;  // Reasonable upper bound for HNSW levels
   static constexpr size_t INVALID_ID = static_cast<size_t>(-1);  // Sentinel for empty entry point
