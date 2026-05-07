@@ -80,7 +80,6 @@ auto dists = gpu.search(query, buf, dim, n, vanedb::gpu::MetalMetric::L2);
 ```
 
 ## Demo: Obsidian Semantic Search
-Location: `/Users/anton/code/search/`
 
 A working semantic search tool built on VaneDB demonstrating real-world usage:
 ```bash

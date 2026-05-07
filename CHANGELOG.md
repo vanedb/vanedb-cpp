@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING: Project renamed from QuiverDB to VaneDB.** Pre-1.0, so no
+  on-disk break — HNSW index files written with the old name still load
+  (the `0x51565244` "QVRD" magic is retained for backward compat). What
+  *did* change for downstream consumers:
+  - C++ namespace: `quiverdb::` → `vanedb::`
+  - Python module: `import quiverdb_py` → `import vanedb_py`
+  - CMake options: `QUIVERDB_BUILD_*` → `VANEDB_BUILD_*`
+  - Preprocessor macros injected by callers (e.g. `-DQUIVER_CUDA_ENABLED`)
+    → `-DVANE_CUDA_ENABLED`
+  - Logging macros (`QUIVERDB_LOG_*` / `QUIVERDB_LOG_LEVEL_*`) → `VANEDB_LOG_*`
+  - Repository: `github.com/tsvet01/quiverdb` → `github.com/tsvet01/vanedb`
+    (GitHub redirects the old URL).
+
 ### Added
 - Comprehensive corruption detection tests for file format validation
   - Invalid magic number, version, metric detection
