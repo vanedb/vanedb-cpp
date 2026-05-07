@@ -15,7 +15,8 @@
 #include <unistd.h>
 #endif
 
-#include "distance.h"
+#include "detail/file_utils.h"
+#include "distance_strategy.h"
 #include "vector_store.h"
 #include <algorithm>
 #include <cstddef>
@@ -105,6 +106,7 @@ public:
     ids_ptr_ = reinterpret_cast<const uint64_t*>(static_cast<const uint8_t*>(mapped_) + HEADER_SIZE);
     vectors_ptr_ = reinterpret_cast<const float*>(
         static_cast<const uint8_t*>(mapped_) + HEADER_SIZE + num_vectors_ * sizeof(uint64_t));
+    dist_ = DistanceComputer(metric_, dim_);
     try {
       id_map_.reserve(num_vectors_);
       for (size_t i = 0; i < num_vectors_; ++i) id_map_[ids_ptr_[i]] = i;
@@ -122,7 +124,7 @@ public:
     fd_(o.fd_),
 #endif
     mapped_(o.mapped_), file_size_(o.file_size_), dim_(o.dim_), num_vectors_(o.num_vectors_),
-    metric_(o.metric_), ids_ptr_(o.ids_ptr_), vectors_ptr_(o.vectors_ptr_), id_map_(std::move(o.id_map_)) {
+    metric_(o.metric_), dist_(o.dist_), ids_ptr_(o.ids_ptr_), vectors_ptr_(o.vectors_ptr_), id_map_(std::move(o.id_map_)) {
 #ifdef QUIVERDB_WINDOWS
     o.file_handle_ = INVALID_HANDLE_VALUE; o.mapping_handle_ = nullptr;
 #else
@@ -141,7 +143,7 @@ public:
       fd_ = o.fd_; o.fd_ = -1;
 #endif
       mapped_ = o.mapped_; file_size_ = o.file_size_; dim_ = o.dim_; num_vectors_ = o.num_vectors_;
-      metric_ = o.metric_; ids_ptr_ = o.ids_ptr_; vectors_ptr_ = o.vectors_ptr_;
+      metric_ = o.metric_; dist_ = o.dist_; ids_ptr_ = o.ids_ptr_; vectors_ptr_ = o.vectors_ptr_;
       id_map_ = std::move(o.id_map_); o.mapped_ = nullptr;
     }
     return *this;
@@ -160,7 +162,7 @@ public:
     std::vector<SearchResult> res;
     res.reserve(num_vectors_);
     for (size_t i = 0; i < num_vectors_; ++i)
-      res.push_back({ids_ptr_[i], dist(query, vectors_ptr_ + i * dim_)});
+      res.push_back({ids_ptr_[i], dist_(query, vectors_ptr_ + i * dim_)});
     size_t n = std::min(k, res.size());
     std::partial_sort(res.begin(), res.begin() + n, res.end());
     res.resize(n);
@@ -183,15 +185,6 @@ private:
 #endif
   }
 
-  float dist(const float* a, const float* b) const {
-    switch (metric_) {
-      case DistanceMetric::L2: return l2_sq(a, b, dim_);
-      case DistanceMetric::COSINE: return cosine_distance(a, b, dim_);
-      case DistanceMetric::DOT: return -dot_product(a, b, dim_);
-      default: return std::numeric_limits<float>::infinity();
-    }
-  }
-
 #ifdef QUIVERDB_WINDOWS
   HANDLE file_handle_ = INVALID_HANDLE_VALUE;
   HANDLE mapping_handle_ = nullptr;
@@ -201,6 +194,7 @@ private:
   void* mapped_ = nullptr;
   size_t file_size_ = 0, dim_ = 0, num_vectors_ = 0;
   DistanceMetric metric_ = DistanceMetric::L2;
+  DistanceComputer dist_;
   const uint64_t* ids_ptr_ = nullptr;
   const float* vectors_ptr_ = nullptr;
   std::unordered_map<uint64_t, size_t> id_map_;
@@ -240,19 +234,8 @@ public:
     f.write(reinterpret_cast<const char*>(vectors_.data()), vectors_.size() * sizeof(float));
     f.flush();
     if (!f) { std::remove(tmp.c_str()); throw std::runtime_error("Write failed"); }
-    // IMPORTANT: Close ofstream BEFORE reopening for fsync. On Windows, CreateFileA
-    // fails if the file is still open by ofstream (exclusive lock). This order is correct.
-    f.close();
-#ifdef QUIVERDB_WINDOWS
-    // Reopen and flush to disk for durability before atomic rename
-    HANDLE hFile = CreateFileA(tmp.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile != INVALID_HANDLE_VALUE) { FlushFileBuffers(hFile); CloseHandle(hFile); }
-#else
-    // Reopen and fsync for durability before atomic rename
-    int fd = open(tmp.c_str(), O_WRONLY);
-    if (fd >= 0) { fsync(fd); close(fd); }
-#endif
+    f.close();  // close before fsync_file (see file_utils.h: Windows lock contract)
+    detail::fsync_file(tmp);
     if (std::rename(tmp.c_str(), filename.c_str()) != 0) {
       std::remove(tmp.c_str()); throw std::runtime_error("Rename failed");
     }

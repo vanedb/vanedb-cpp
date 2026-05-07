@@ -82,7 +82,7 @@ For large datasets, use `HNSWIndex` for much faster search:
 #include "core/hnsw_index.h"
 
 // Create HNSW index
-quiverdb::HNSWIndex index(768, quiverdb::HNSWDistanceMetric::COSINE, 100000);
+quiverdb::HNSWIndex index(768, quiverdb::DistanceMetric::COSINE, 100000);
 
 // Add vectors
 index.add(1, doc1);
@@ -138,7 +138,7 @@ import numpy as np
 print(quiverdb.__version__)  # "0.1.0"
 
 # === HNSW Index (approximate, fastest for large datasets) ===
-index = quiverdb.HNSWIndex(128, quiverdb.HNSWDistanceMetric.COSINE)
+index = quiverdb.HNSWIndex(128, quiverdb.DistanceMetric.COSINE)
 vec = np.random.rand(128).astype(np.float32)
 index.add(1, vec)
 ids, dists = index.search(vec, 10)

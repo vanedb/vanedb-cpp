@@ -1,6 +1,7 @@
 // QuiverDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
 #pragma once
-#include "distance.h"
+#include "distance_strategy.h"
+#include "detail/file_utils.h"
 #include <algorithm>
 #include <atomic>
 #include <cmath>
@@ -18,16 +19,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#if defined(_WIN32) || defined(_WIN64)
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#elif defined(__unix__) || defined(__APPLE__)
-#include <fcntl.h>
-#include <unistd.h>
-#endif
-
 namespace quiverdb {
 
 namespace detail {
@@ -54,8 +45,6 @@ template <typename T> void read_vec(std::ifstream& f, std::vector<T>& v) {
 }
 } // namespace detail
 
-enum class HNSWDistanceMetric { L2, COSINE, DOT };
-
 struct HNSWSearchResult {
   uint64_t id;
   float distance;
@@ -70,9 +59,10 @@ public:
   static constexpr int MAX_LEVEL = 32;  // Reasonable upper bound for HNSW levels
   static constexpr size_t INVALID_ID = static_cast<size_t>(-1);  // Sentinel for empty entry point
 
-  explicit HNSWIndex(size_t dimension, HNSWDistanceMetric metric = HNSWDistanceMetric::L2,
+  explicit HNSWIndex(size_t dimension, DistanceMetric metric = DistanceMetric::L2,
       size_t max_elements = 100000, size_t M = 16, size_t ef_construction = 200, uint32_t seed = 42)
-      : dim_(dimension), metric_(metric), max_elements_(max_elements), M_(M), M_max_(M),
+      : dim_(dimension), metric_(metric), dist_(metric, dimension),
+        max_elements_(max_elements), M_(M), M_max_(M),
         M_max0_(M * 2), ef_construction_(std::max(ef_construction, M)), ef_search_(50),
         mult_(M > 1 ? 1.0 / std::log(static_cast<double>(M)) : 1.0), level_gen_(seed) {
     if (dimension == 0) throw std::invalid_argument("Dimension must be > 0");
@@ -111,13 +101,13 @@ public:
     size_t curr = ep_.load();
     int cur_max_level = max_level_.load();
     if (level < cur_max_level) {
-      float d = dist(vec, get_vec(curr));
+      float d = dist_(vec, get_vec(curr));
       for (int l = cur_max_level; l > level; --l) {
         bool changed = true;
         while (changed) {
           changed = false;
           for (size_t n : neighbors_[curr][l]) {
-            float nd = dist(vec, get_vec(n));
+            float nd = dist_(vec, get_vec(n));
             if (nd < d) { d = nd; curr = n; changed = true; }
           }
         }
@@ -134,10 +124,10 @@ public:
         auto& nc = neighbors_[nid][l];
         if (nc.size() < max_conn) { nc.push_back(iid); }
         else {
-          float d2new = dist(get_vec(nid), vec);
+          float d2new = dist_(get_vec(nid), vec);
           std::vector<std::pair<float, size_t>> cands;
           cands.reserve(nc.size() + 1);
-          for (size_t c : nc) cands.emplace_back(dist(get_vec(nid), get_vec(c)), c);
+          for (size_t c : nc) cands.emplace_back(dist_(get_vec(nid), get_vec(c)), c);
           cands.emplace_back(d2new, iid);
           std::sort(cands.begin(), cands.end());
           nc.clear();
@@ -164,14 +154,14 @@ public:
     if (count_ == 0) return {};
 
     size_t curr = ep_.load();
-    float d = dist(query, get_vec(curr));
+    float d = dist_(query, get_vec(curr));
     for (int l = max_level_.load(); l > 0; --l) {
       bool changed = true;
       while (changed) {
         changed = false;
         if (static_cast<int>(neighbors_[curr].size()) <= l) continue;
         for (size_t n : neighbors_[curr][l]) {
-          float nd = dist(query, get_vec(n));
+          float nd = dist_(query, get_vec(n));
           if (nd < d) { d = nd; curr = n; changed = true; }
         }
       }
@@ -243,19 +233,8 @@ public:
       f.write(rng_state.data(), rng_state.size());
       f.flush();
       if (!f) { std::filesystem::remove(tmp); throw std::runtime_error("Write failed: " + tmp); }
-      // IMPORTANT: Close ofstream BEFORE reopening for fsync. On Windows, CreateFileA
-      // fails if the file is still open by ofstream (exclusive lock). This order is correct.
-      f.close();
-#if defined(_WIN32) || defined(_WIN64)
-      // Reopen and flush to disk for durability before atomic rename
-      HANDLE hFile = CreateFileA(tmp.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-      if (hFile != INVALID_HANDLE_VALUE) { FlushFileBuffers(hFile); CloseHandle(hFile); }
-#elif defined(__unix__) || defined(__APPLE__)
-      // Reopen and fsync for durability before atomic rename
-      int fd = open(tmp.c_str(), O_WRONLY);
-      if (fd >= 0) { fsync(fd); close(fd); }
-#endif
+      f.close();  // close before fsync_file (see file_utils.h: Windows lock contract)
+      detail::fsync_file(tmp);
       std::filesystem::rename(tmp, filename);
     } catch (...) { f.close(); std::filesystem::remove(tmp); throw; }
   }
@@ -279,7 +258,7 @@ public:
     detail::read_bin(f, ef_s);
     detail::read_bin(f, mult);
 
-    auto idx = std::make_unique<HNSWIndex>(dim, static_cast<HNSWDistanceMetric>(met), max_el, M, ef_con);
+    auto idx = std::make_unique<HNSWIndex>(dim, static_cast<DistanceMetric>(met), max_el, M, ef_con);
     idx->ef_search_.store(ef_s);
     idx->mult_ = mult;
 
@@ -354,25 +333,17 @@ public:
   }
 
 private:
+  static constexpr double MIN_LEVEL_RANDOM = 1e-9;  // Clamp floor for level generation RNG
   using MaxHeap = std::priority_queue<std::pair<float, size_t>>;
 
   int get_level() {
     std::uniform_real_distribution<double> d(0.0, 1.0);
-    double r = std::max(d(level_gen_), 1e-9);  // Clamp to prevent log overflow
+    double r = std::max(d(level_gen_), MIN_LEVEL_RANDOM);
     int level = static_cast<int>(-std::log(r) * mult_);
     return std::min(level, MAX_LEVEL);
   }
 
   const float* get_vec(size_t iid) const { return vectors_.data() + iid * dim_; }
-
-  float dist(const float* a, const float* b) const {
-    switch (metric_) {
-      case HNSWDistanceMetric::L2: return l2_sq(a, b, dim_);
-      case HNSWDistanceMetric::COSINE: return cosine_distance(a, b, dim_);
-      case HNSWDistanceMetric::DOT: return -dot_product(a, b, dim_);
-      default: return std::numeric_limits<float>::infinity();
-    }
-  }
 
   MaxHeap search_layer(const float* q, size_t ep, size_t ef, int level) const {
     // Versioned thread-local visited bitmap. vis[i] == vis_epoch means
@@ -401,7 +372,7 @@ private:
     std::priority_queue<std::pair<float, size_t>, std::vector<std::pair<float, size_t>>,
                         std::greater<std::pair<float, size_t>>> cands;
     MaxHeap res;
-    float d = dist(q, get_vec(ep));
+    float d = dist_(q, get_vec(ep));
     cands.emplace(d, ep);
     res.emplace(d, ep);
     float lb = d;
@@ -414,7 +385,7 @@ private:
       for (size_t n : neighbors_[cid][level]) {
         if (vis[n] == vis_epoch) continue;
         vis[n] = vis_epoch;
-        float nd = dist(q, get_vec(n));
+        float nd = dist_(q, get_vec(n));
         if (res.size() < ef || nd < lb) {
           cands.emplace(nd, n);
           res.emplace(nd, n);
@@ -444,7 +415,7 @@ private:
       if (r.size() >= M) break;
       bool ok = true;
       for (size_t s : r)
-        if (dist(get_vec(cid), get_vec(s)) < dq) { ok = false; break; }
+        if (dist_(get_vec(cid), get_vec(s)) < dq) { ok = false; break; }
       if (ok) r.push_back(cid);
     }
     if (r.size() < M) {
@@ -457,7 +428,8 @@ private:
   }
 
   size_t dim_;
-  HNSWDistanceMetric metric_;
+  DistanceMetric metric_;
+  DistanceComputer dist_;
   size_t max_elements_, M_, M_max_, M_max0_, ef_construction_;
   std::atomic<size_t> ef_search_;  // Atomic for thread-safe reads during search
   double mult_;
