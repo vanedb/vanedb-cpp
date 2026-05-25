@@ -1,9 +1,26 @@
-# vanedb
+# vanedb-cpp
 
 ## Overview
 Embeddable vector database for edge AI. Header-only C++20, SIMD-optimized, cross-platform.
 
-## Current Status: v0.1.0 (in development)
+## Role in the VaneDB Project
+
+This is the **C++ header-only** implementation. The Rust implementation lives at
+[vanedb/vanedb](https://github.com/vanedb/vanedb) and is the primary entry point
+for Rust (`cargo add vanedb`), Python (`pip install vanedb`), and WASM consumers.
+
+**Why two implementations:**
+- **C++** (this repo): drop a header into any CMake/Bazel project. No Rust toolchain
+  needed. The embed path for iOS/Android native code and existing C++ codebases.
+- **Rust**: cleaner concurrency, ergonomic Python/WASM bindings, the path for new
+  language ecosystems.
+
+**Alignment policy:** Features generally land in Rust first. C++ syncs core algorithms,
+distance functions, and on-disk persistence formats (HNSW files written by one
+implementation should load in the other when feasible). Intentional divergence at
+the edges — WASM is Rust-only; the header-only embed path is C++-only.
+
+## Current Status: v0.1.0 (frozen for sync work)
 
 ### Features
 | Feature | Status |
@@ -88,25 +105,23 @@ python3 search.py find "your query"       # Search
 python3 search.py interactive             # REPL mode
 ```
 
-## Roadmap
+## Maintenance Posture
 
-### Near-term (v0.2.0)
-- [ ] PyPI package distribution (`pip install vanedb`)
-- [ ] Incremental index updates (add/remove without full rebuild)
-- [ ] Batch search API (multiple queries in one call)
-- [ ] Metadata/filtering support (search with constraints)
+This repo accepts:
+- Bug fixes and CVE patches
+- Performance work on hot paths (HNSW search, SIMD distance)
+- New platform/compiler support (CI matrix expansion)
+- On-disk format additions that mirror the Rust repo (so files are
+  interchangeable when feasible)
 
-### Medium-term (v0.3.0)
-- [ ] Product quantization (PQ) for 4-8x memory reduction
-- [ ] npm/WebAssembly bindings for browser/Node.js
-- [ ] Disk-based HNSW (mmap + HNSW hybrid)
-- [ ] Multi-vector queries (document retrieval)
+This repo defers to the Rust repo for:
+- New high-level features (batch search API, metadata filtering, PQ, sharding)
+- Language bindings beyond Python (Node/WASM, Swift, Go)
+- Package distribution work (PyPI naming, npm)
 
-### Long-term
-- [ ] Distributed sharding for billion-scale
-- [ ] CUDA optimizations (tensor cores)
-- [ ] Swift package for native iOS/macOS
-- [ ] Real-time index updates (concurrent insert/search)
+Check [vanedb/vanedb](https://github.com/vanedb/vanedb) issues before filing
+feature requests here. PyPI distribution (`pip install vanedb`), WASM, and
+batch/metadata APIs are tracked there.
 
 ## Known Limitations
 - No deletion in HNSWIndex (rebuild required)
