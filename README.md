@@ -4,8 +4,8 @@
 
 **Embeddable vector database for edge AI**
 
-[![Build](https://github.com/tsvet01/vanedb/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/tsvet01/vanedb/actions/workflows/build-and-test.yml)
-[![codecov](https://codecov.io/gh/tsvet01/vanedb/branch/main/graph/badge.svg)](https://codecov.io/gh/tsvet01/vanedb)
+[![Build](https://github.com/vanedb/vanedb-cpp/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/vanedb/vanedb-cpp/actions/workflows/build-and-test.yml)
+[![codecov](https://codecov.io/gh/vanedb/vanedb-cpp/branch/main/graph/badge.svg)](https://codecov.io/gh/vanedb/vanedb-cpp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-00599C.svg)](https://en.cppreference.com/w/cpp/20)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)](https://www.python.org/)
@@ -15,6 +15,8 @@
 ---
 
 Header-only C++20 vector database with SIMD acceleration. Runs on Linux, macOS, Windows, iOS, and Android.
+
+> **Two implementations.** VaneDB is maintained as both C++ and Rust under the [@vanedb](https://github.com/vanedb) org. This repo is the **C++ header-only** version — drop a header into any CMake project, no Rust toolchain needed. For the Rust crate (with Python/PyO3 and WASM bindings), see **[vanedb/vanedb](https://github.com/vanedb/vanedb)**.
 
 ## Why VaneDB?
 
