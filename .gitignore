@@ -49,10 +49,8 @@ __pycache__/
 # External dependencies (fetched separately)
 external/
 
-# Build artifacts
-build_py/
-build_cov/
-build_test/
+# Build artifacts (multiple per-config build trees from benchmarking)
+build_*/
 
 # Coverage artifacts
 *.gcda
