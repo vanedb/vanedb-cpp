@@ -29,7 +29,7 @@ the edges — WASM is Rust-only; the header-only embed path is C++-only.
 | VectorStore | In-memory k-NN, thread-safe |
 | HNSWIndex | Approximate NN with save/load |
 | MMapVectorStore | Memory-mapped zero-copy |
-| GPU Acceleration | Metal (Apple Silicon), CUDA (NVIDIA) |
+| GPU Acceleration | Metal (Apple Silicon). CUDA experimental — unwired, untested |
 | Python Bindings | pybind11 + NumPy |
 | Mobile | iOS arm64, Android arm64-v8a/x86_64 |
 

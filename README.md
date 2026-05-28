@@ -34,7 +34,7 @@ Header-only C++20 vector database with SIMD acceleration. Runs on Linux, macOS, 
 
 - **SIMD-optimized**: ARM NEON, x86 AVX2 (~100ns for 768d vectors)
 - **Multiple indexes**: Brute-force, HNSW, Memory-mapped
-- **GPU acceleration**: Metal (Apple Silicon), CUDA (NVIDIA)
+- **GPU acceleration**: Metal (Apple Silicon). CUDA (NVIDIA) is experimental — kernel source only, not yet wired into the build
 - **Thread-safe**: Concurrent reads with `std::shared_mutex`
 - **Python bindings**: NumPy integration, GIL-safe
 

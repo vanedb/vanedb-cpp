@@ -1,4 +1,8 @@
 // VaneDB - Copyright (c) 2025 Anton Tsvetkov - MIT License
+//
+// EXPERIMENTAL / UNWIRED: these CUDA kernels are not compiled into any build
+// target (see CMakeLists.txt), are untested, and require NVIDIA hardware.
+// Metal is the supported GPU path. Tracked as future work.
 #pragma once
 
 #ifdef __CUDACC__
