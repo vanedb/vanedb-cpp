@@ -173,7 +173,9 @@ endif()
 # CUDA GPU support
 if(VANEDB_BUILD_CUDA)
   enable_language(CUDA)
-  # CUDA targets would be added here when needed
+  # EXPERIMENTAL: cuda_distance.cuh contains kernel source but is intentionally
+  # not yet wired into a build target. It is unverified — there is no NVIDIA
+  # hardware in CI. Metal is the supported GPU path.
 endif()
 
 # Install

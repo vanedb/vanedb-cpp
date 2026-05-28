@@ -196,7 +196,7 @@ ctest --output-on-failure
 | `VANEDB_BUILD_PYTHON` | ON | Build Python bindings |
 | `VANEDB_BUILD_EXAMPLES` | ON | Build examples |
 | `VANEDB_BUILD_METAL` | OFF | Build Metal GPU support (macOS) |
-| `VANEDB_BUILD_CUDA` | OFF | Build CUDA GPU support |
+| `VANEDB_BUILD_CUDA` | OFF | Enable CUDA language (experimental — kernel source is not yet wired into a build target) |
 
 ---
 
@@ -272,7 +272,8 @@ vanedb/
 - **Brute-force search**: VectorStore uses O(n) search; use HNSWIndex for large datasets
 - **No deletion in HNSW**: Removing vectors requires rebuilding the index
 - **Single-file persistence**: No sharding for very large datasets
-- **GPU dimensions**: Metal/CUDA require dimensions divisible by 4
+- **GPU dimensions**: Metal requires dimensions divisible by 4 (the experimental CUDA kernels assume the same)
+- **CUDA is experimental**: `cuda_distance.cuh` contains kernel source but is not compiled into any build target, is untested, and requires NVIDIA hardware. Metal is the supported GPU path.
 
 ---
 
