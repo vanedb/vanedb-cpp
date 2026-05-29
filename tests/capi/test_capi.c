@@ -20,5 +20,28 @@ int main(void) {
         printf("capi: distance OK\n");
     }
 
+    {
+        float v0[2] = {0.f, 0.f};
+        float v1[2] = {1.f, 1.f};
+        float q[2]  = {0.1f, 0.1f};
+        vanedb_cpp_store* s = vanedb_cpp_store_new(2, VANEDB_L2);
+        assert(s != NULL);
+        assert(vanedb_cpp_store_add(s, 10, v0) == 0);
+        assert(vanedb_cpp_store_add(s, 20, v1) == 0);
+        uint64_t ids[2]; float ds[2];
+        size_t n = vanedb_cpp_store_search(s, q, 2, ids, ds);
+        assert(n == 2);
+        assert(ids[0] == 10);          /* nearest to (0.1,0.1) is (0,0) */
+        assert(ds[0] <= ds[1]);        /* sorted ascending */
+
+        /* negative paths */
+        assert(vanedb_cpp_store_new(0, VANEDB_L2) == NULL);     /* dim=0 => ctor throws => NULL */
+        assert(vanedb_cpp_store_add(NULL, 1, v0) == 1);         /* null handle guarded */
+        assert(vanedb_cpp_store_search(NULL, q, 2, ids, ds) == 0); /* null handle guarded */
+
+        vanedb_cpp_store_free(s);
+        printf("capi: store OK\n");
+    }
+
     return 0;
 }
