@@ -50,4 +50,41 @@ void vanedb_cpp_store_free(vanedb_cpp_store* s) {
   delete reinterpret_cast<VectorStore*>(s);
 }
 
+vanedb_cpp_hnsw* vanedb_cpp_hnsw_new(size_t dim, vanedb_metric metric, size_t capacity,
+                                     size_t M, size_t ef_construction, uint64_t seed) {
+  try {
+    return reinterpret_cast<vanedb_cpp_hnsw*>(
+      new HNSWIndex(dim, to_metric(metric), capacity, M, ef_construction,
+                    static_cast<uint32_t>(seed)));
+  } catch (...) { return nullptr; }
+}
+int vanedb_cpp_hnsw_add(vanedb_cpp_hnsw* h, uint64_t id, const float* v) {
+  if (!h) return 1;
+  try { reinterpret_cast<HNSWIndex*>(h)->add(id, v); return 0; }
+  catch (...) { return 1; }
+}
+size_t vanedb_cpp_hnsw_search(vanedb_cpp_hnsw* h, const float* q, size_t k, size_t ef_search,
+                              uint64_t* out_ids, float* out_dists) {
+  if (!h) return 0;
+  try {
+    auto* idx = reinterpret_cast<HNSWIndex*>(h);
+    idx->set_ef_search(ef_search);
+    auto res = idx->search(q, k);
+    for (size_t i = 0; i < res.size(); ++i) { out_ids[i] = res[i].id; out_dists[i] = res[i].distance; }
+    return res.size();
+  } catch (...) { return 0; }
+}
+int vanedb_cpp_hnsw_save(vanedb_cpp_hnsw* h, const char* path) {
+  if (!h) return 1;
+  try { reinterpret_cast<HNSWIndex*>(h)->save(path); return 0; }
+  catch (...) { return 1; }
+}
+vanedb_cpp_hnsw* vanedb_cpp_hnsw_load(const char* path) {
+  try { return reinterpret_cast<vanedb_cpp_hnsw*>(HNSWIndex::load(path).release()); }
+  catch (...) { return nullptr; }
+}
+void vanedb_cpp_hnsw_free(vanedb_cpp_hnsw* h) {
+  delete reinterpret_cast<HNSWIndex*>(h);
+}
+
 }
