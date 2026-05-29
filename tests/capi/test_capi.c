@@ -72,5 +72,21 @@ int main(void) {
         printf("capi: hnsw OK\n");
     }
 
+    {
+        uint64_t ids_in[2] = {10, 20};
+        float vecs[4] = {0.f, 0.f, 1.f, 1.f}; /* row-major: id10=(0,0), id20=(1,1) */
+        float q[2] = {0.1f, 0.1f};
+        assert(vanedb_cpp_mmap_build("capi_mmap.bin", 2, VANEDB_L2, ids_in, vecs, 2) == 0);
+        vanedb_cpp_mmap* m = vanedb_cpp_mmap_open("capi_mmap.bin");
+        assert(m != NULL);
+        uint64_t ids[2]; float ds[2];
+        size_t n = vanedb_cpp_mmap_search(m, q, 2, ids, ds);
+        assert(n == 2 && ids[0] == 10);
+        vanedb_cpp_mmap_free(m);
+        /* negative path */
+        assert(vanedb_cpp_mmap_search(NULL, q, 2, ids, ds) == 0); /* null handle guarded */
+        printf("capi: mmap OK\n");
+    }
+
     return 0;
 }

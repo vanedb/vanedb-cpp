@@ -87,4 +87,30 @@ void vanedb_cpp_hnsw_free(vanedb_cpp_hnsw* h) {
   delete reinterpret_cast<HNSWIndex*>(h);
 }
 
+int vanedb_cpp_mmap_build(const char* path, size_t dim, vanedb_metric metric,
+                          const uint64_t* ids, const float* vecs, size_t n) {
+  try {
+    MMapVectorStoreBuilder b(dim, to_metric(metric));
+    for (size_t i = 0; i < n; ++i) b.add(ids[i], vecs + i * dim);
+    b.save(path);
+    return 0;
+  } catch (...) { return 1; }
+}
+vanedb_cpp_mmap* vanedb_cpp_mmap_open(const char* path) {
+  try { return reinterpret_cast<vanedb_cpp_mmap*>(new MMapVectorStore(path)); }
+  catch (...) { return nullptr; }
+}
+size_t vanedb_cpp_mmap_search(vanedb_cpp_mmap* m, const float* q, size_t k,
+                              uint64_t* out_ids, float* out_dists) {
+  if (!m) return 0;
+  try {
+    auto res = reinterpret_cast<MMapVectorStore*>(m)->search(q, k);
+    for (size_t i = 0; i < res.size(); ++i) { out_ids[i] = res[i].id; out_dists[i] = res[i].distance; }
+    return res.size();
+  } catch (...) { return 0; }
+}
+void vanedb_cpp_mmap_free(vanedb_cpp_mmap* m) {
+  delete reinterpret_cast<MMapVectorStore*>(m);
+}
+
 }
