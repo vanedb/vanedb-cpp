@@ -21,6 +21,9 @@ if(NOT MSVC)
   set(CMAKE_CXX_FLAGS_RELEASE "-O3")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+  set(CMAKE_C_FLAGS_RELEASE "-O3")
+  set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
 endif()
 
 # Detect x86_64 for AVX2 support

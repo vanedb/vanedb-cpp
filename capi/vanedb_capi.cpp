@@ -54,6 +54,7 @@ vanedb_cpp_hnsw* vanedb_cpp_hnsw_new(size_t dim, vanedb_metric metric, size_t ca
                                      size_t M, size_t ef_construction, uint64_t seed) {
   try {
     return reinterpret_cast<vanedb_cpp_hnsw*>(
+      // seed is uint64_t in the ABI (Rust parity) but the core takes uint32_t; high bits are dropped.
       new HNSWIndex(dim, to_metric(metric), capacity, M, ef_construction,
                     static_cast<uint32_t>(seed)));
   } catch (...) { return nullptr; }

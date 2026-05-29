@@ -26,8 +26,10 @@ int main(void) {
         float q[2]  = {0.1f, 0.1f};
         vanedb_cpp_store* s = vanedb_cpp_store_new(2, VANEDB_L2);
         assert(s != NULL);
-        assert(vanedb_cpp_store_add(s, 10, v0) == 0);
-        assert(vanedb_cpp_store_add(s, 20, v1) == 0);
+        int rc_add0 = vanedb_cpp_store_add(s, 10, v0);
+        assert(rc_add0 == 0);
+        int rc_add1 = vanedb_cpp_store_add(s, 20, v1);
+        assert(rc_add1 == 0);
         uint64_t ids[2]; float ds[2];
         size_t n = vanedb_cpp_store_search(s, q, 2, ids, ds);
         assert(n == 2);
@@ -35,9 +37,12 @@ int main(void) {
         assert(ds[0] <= ds[1]);        /* sorted ascending */
 
         /* negative paths */
-        assert(vanedb_cpp_store_new(0, VANEDB_L2) == NULL);     /* dim=0 => ctor throws => NULL */
-        assert(vanedb_cpp_store_add(NULL, 1, v0) == 1);         /* null handle guarded */
-        assert(vanedb_cpp_store_search(NULL, q, 2, ids, ds) == 0); /* null handle guarded */
+        vanedb_cpp_store* s_bad = vanedb_cpp_store_new(0, VANEDB_L2); /* dim=0 => ctor throws => NULL */
+        assert(s_bad == NULL);
+        int rc_null_add = vanedb_cpp_store_add(NULL, 1, v0);           /* null handle guarded */
+        assert(rc_null_add == 1);
+        size_t n_null = vanedb_cpp_store_search(NULL, q, 2, ids, ds);  /* null handle guarded */
+        assert(n_null == 0);
 
         vanedb_cpp_store_free(s);
         printf("capi: store OK\n");
@@ -49,13 +54,16 @@ int main(void) {
         float q[2]  = {0.1f, 0.1f};
         vanedb_cpp_hnsw* h = vanedb_cpp_hnsw_new(2, VANEDB_L2, 100, 16, 200, 42);
         assert(h != NULL);
-        assert(vanedb_cpp_hnsw_add(h, 10, v0) == 0);
-        assert(vanedb_cpp_hnsw_add(h, 20, v1) == 0);
+        int rc_hadd0 = vanedb_cpp_hnsw_add(h, 10, v0);
+        assert(rc_hadd0 == 0);
+        int rc_hadd1 = vanedb_cpp_hnsw_add(h, 20, v1);
+        assert(rc_hadd1 == 0);
         uint64_t ids[2]; float ds[2];
         size_t n = vanedb_cpp_hnsw_search(h, q, 2, 50, ids, ds);
         assert(n == 2);
         assert(ids[0] == 10);
-        assert(vanedb_cpp_hnsw_save(h, "capi_hnsw.bin") == 0);
+        int rc_save = vanedb_cpp_hnsw_save(h, "capi_hnsw.bin");
+        assert(rc_save == 0);
         vanedb_cpp_hnsw_free(h);
 
         vanedb_cpp_hnsw* h2 = vanedb_cpp_hnsw_load("capi_hnsw.bin");
@@ -65,10 +73,14 @@ int main(void) {
         assert(n2 == 1 && ids2[0] == 10);
         vanedb_cpp_hnsw_free(h2);
         /* negative paths */
-        assert(vanedb_cpp_hnsw_new(0, VANEDB_L2, 100, 16, 200, 42) == NULL); /* dim=0 throws => NULL */
-        assert(vanedb_cpp_hnsw_add(NULL, 1, v0) == 1);                       /* null handle guarded */
-        assert(vanedb_cpp_hnsw_search(NULL, q, 1, 50, ids2, ds2) == 0);      /* null handle guarded */
-        assert(vanedb_cpp_hnsw_save(NULL, "x.bin") == 1);                    /* null handle guarded */
+        vanedb_cpp_hnsw* h_bad = vanedb_cpp_hnsw_new(0, VANEDB_L2, 100, 16, 200, 42); /* dim=0 throws => NULL */
+        assert(h_bad == NULL);
+        int rc_null_hadd = vanedb_cpp_hnsw_add(NULL, 1, v0);                           /* null handle guarded */
+        assert(rc_null_hadd == 1);
+        size_t n_null_h = vanedb_cpp_hnsw_search(NULL, q, 1, 50, ids2, ds2);           /* null handle guarded */
+        assert(n_null_h == 0);
+        int rc_null_save = vanedb_cpp_hnsw_save(NULL, "x.bin");                        /* null handle guarded */
+        assert(rc_null_save == 1);
         printf("capi: hnsw OK\n");
     }
 
@@ -76,7 +88,8 @@ int main(void) {
         uint64_t ids_in[2] = {10, 20};
         float vecs[4] = {0.f, 0.f, 1.f, 1.f}; /* row-major: id10=(0,0), id20=(1,1) */
         float q[2] = {0.1f, 0.1f};
-        assert(vanedb_cpp_mmap_build("capi_mmap.bin", 2, VANEDB_L2, ids_in, vecs, 2) == 0);
+        int rc_build = vanedb_cpp_mmap_build("capi_mmap.bin", 2, VANEDB_L2, ids_in, vecs, 2);
+        assert(rc_build == 0);
         vanedb_cpp_mmap* m = vanedb_cpp_mmap_open("capi_mmap.bin");
         assert(m != NULL);
         uint64_t ids[2]; float ds[2];
@@ -84,7 +97,8 @@ int main(void) {
         assert(n == 2 && ids[0] == 10);
         vanedb_cpp_mmap_free(m);
         /* negative path */
-        assert(vanedb_cpp_mmap_search(NULL, q, 2, ids, ds) == 0); /* null handle guarded */
+        size_t n_null_m = vanedb_cpp_mmap_search(NULL, q, 2, ids, ds); /* null handle guarded */
+        assert(n_null_m == 0);
         printf("capi: mmap OK\n");
     }
 
