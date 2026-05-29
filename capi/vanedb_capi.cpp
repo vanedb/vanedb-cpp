@@ -17,5 +17,15 @@ DistanceMetric to_metric(vanedb_metric m) {
 } // namespace
 
 extern "C" {
-// Implementations added per task below.
+
+float vanedb_cpp_l2_sq(const float* a, const float* b, size_t dim) {
+  return l2_sq(a, b, dim);
+}
+float vanedb_cpp_cosine_distance(const float* a, const float* b, size_t dim) {
+  return cosine_distance(a, b, dim);
+}
+float vanedb_cpp_dot_product(const float* a, const float* b, size_t dim) {
+  return dot_product(a, b, dim);
+}
+
 }
