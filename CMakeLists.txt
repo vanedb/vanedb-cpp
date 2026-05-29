@@ -197,6 +197,9 @@ if(VANEDB_BUILD_CAPI)
     set_target_properties(test_capi PROPERTIES LINKER_LANGUAGE CXX)
     add_test(NAME capi COMMAND test_capi)
   endif()
+
+  install(TARGETS vanedb_cpp_capi ARCHIVE DESTINATION lib)
+  install(FILES capi/vanedb_capi.h DESTINATION include/vanedb)
 endif()
 
 # Install
