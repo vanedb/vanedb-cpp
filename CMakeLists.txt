@@ -178,6 +178,27 @@ if(VANEDB_BUILD_CUDA)
   # hardware in CI. Metal is the supported GPU path.
 endif()
 
+# C API (shippable extern "C" surface; consumed by vanedb-bench)
+option(VANEDB_BUILD_CAPI "Build the C API static library" OFF)
+if(VANEDB_BUILD_CAPI)
+  add_library(vanedb_cpp_capi STATIC capi/vanedb_capi.cpp)
+  target_include_directories(vanedb_cpp_capi PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR})
+  target_compile_features(vanedb_cpp_capi PRIVATE cxx_std_20)
+
+  if(VANEDB_BUILD_TESTS)
+    # Enable C so CMake can compile test_capi.c (project declares LANGUAGES CXX only).
+    enable_language(C)
+    add_executable(test_capi tests/capi/test_capi.c)
+    target_include_directories(test_capi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(test_capi PRIVATE vanedb_cpp_capi)
+    # The static lib is C++; link the C test with the C++ runtime.
+    set_target_properties(test_capi PROPERTIES LINKER_LANGUAGE CXX)
+    add_test(NAME capi COMMAND test_capi)
+  endif()
+endif()
+
 # Install
 install(TARGETS vanedb EXPORT vanedb-targets)
 install(DIRECTORY src/core/ DESTINATION include/vanedb FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh")
