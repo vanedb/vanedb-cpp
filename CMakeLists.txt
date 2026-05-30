@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(vanedb VERSION 0.1.0 LANGUAGES CXX)
+project(vanedb VERSION 0.1.0 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,6 +21,9 @@ if(NOT MSVC)
   set(CMAKE_CXX_FLAGS_RELEASE "-O3")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+  set(CMAKE_C_FLAGS_RELEASE "-O3")
+  set(CMAKE_C_FLAGS_DEBUG "-O0 -g")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
 endif()
 
 # Detect x86_64 for AVX2 support
@@ -176,6 +179,28 @@ if(VANEDB_BUILD_CUDA)
   # EXPERIMENTAL: cuda_distance.cuh contains kernel source but is intentionally
   # not yet wired into a build target. It is unverified — there is no NVIDIA
   # hardware in CI. Metal is the supported GPU path.
+endif()
+
+# C API (shippable extern "C" surface; consumed by vanedb-bench)
+option(VANEDB_BUILD_CAPI "Build the C API static library" OFF)
+if(VANEDB_BUILD_CAPI)
+  add_library(vanedb_cpp_capi STATIC capi/vanedb_capi.cpp)
+  target_include_directories(vanedb_cpp_capi PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR})
+  target_compile_features(vanedb_cpp_capi PRIVATE cxx_std_20)
+
+  if(VANEDB_BUILD_TESTS)
+    add_executable(test_capi tests/capi/test_capi.c)
+    target_include_directories(test_capi PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(test_capi PRIVATE vanedb_cpp_capi)
+    # The static lib is C++; link the C test with the C++ runtime.
+    set_target_properties(test_capi PROPERTIES LINKER_LANGUAGE CXX)
+    add_test(NAME capi COMMAND test_capi)
+  endif()
+
+  install(TARGETS vanedb_cpp_capi ARCHIVE DESTINATION lib)
+  install(FILES capi/vanedb_capi.h DESTINATION include/vanedb)
 endif()
 
 # Install
