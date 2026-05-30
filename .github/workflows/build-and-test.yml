@@ -389,4 +389,4 @@ jobs:
       run: cmake --build build-capi --target test_capi --config Release --parallel
 
     - name: Run C API test
-      run: ctest --test-dir build-capi -R capi --config Release --output-on-failure
+      run: ctest --test-dir build-capi -R capi --build-config Release --output-on-failure
