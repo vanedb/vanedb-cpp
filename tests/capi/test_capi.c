@@ -102,5 +102,13 @@ int main(void) {
         printf("capi: mmap OK\n");
     }
 
+    {
+        int rc_ns = vanedb_cpp_hnsw_save(NULL, NULL);   assert(rc_ns == 1); /* null handle */
+        vanedb_cpp_hnsw* h_np = vanedb_cpp_hnsw_load(NULL); assert(h_np == NULL);
+        int rc_mb = vanedb_cpp_mmap_build(NULL, 2, VANEDB_L2, NULL, NULL, 0); assert(rc_mb == 1);
+        vanedb_cpp_mmap* m_np = vanedb_cpp_mmap_open(NULL); assert(m_np == NULL);
+        printf("capi: null-path guards OK\n");
+    }
+
     return 0;
 }

@@ -22,6 +22,8 @@ typedef enum { VANEDB_L2 = 0, VANEDB_COSINE = 1, VANEDB_DOT = 2 } vanedb_metric;
  *    then searches). This mirrors the Rust ABI; it is not thread-safe to call
  *    concurrently with different ef_search values on the same handle, which the
  *    single-threaded benchmark consumer never does. Do not remove this parameter.
+ *  - to_metric maps any unrecognized metric value to L2 (no error).
+ *  - vanedb_cpp_hnsw_new: seed is uint64_t for ABI parity; only the low 32 bits are used.
  */
 
 /* Distance (stateless) */

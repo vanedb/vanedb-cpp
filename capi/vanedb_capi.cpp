@@ -42,8 +42,9 @@ size_t vanedb_cpp_store_search(vanedb_cpp_store* s, const float* q, size_t k,
   if (!s) return 0;
   try {
     auto res = reinterpret_cast<VectorStore*>(s)->search(q, k);
-    for (size_t i = 0; i < res.size(); ++i) { out_ids[i] = res[i].id; out_dists[i] = res[i].distance; }
-    return res.size();
+    size_t n = res.size() < k ? res.size() : k;
+    for (size_t i = 0; i < n; ++i) { out_ids[i] = res[i].id; out_dists[i] = res[i].distance; }
+    return n;
   } catch (...) { return 0; }
 }
 void vanedb_cpp_store_free(vanedb_cpp_store* s) {
@@ -71,16 +72,19 @@ size_t vanedb_cpp_hnsw_search(vanedb_cpp_hnsw* h, const float* q, size_t k, size
     auto* idx = reinterpret_cast<HNSWIndex*>(h);
     idx->set_ef_search(ef_search);
     auto res = idx->search(q, k);
-    for (size_t i = 0; i < res.size(); ++i) { out_ids[i] = res[i].id; out_dists[i] = res[i].distance; }
-    return res.size();
+    size_t n = res.size() < k ? res.size() : k;
+    for (size_t i = 0; i < n; ++i) { out_ids[i] = res[i].id; out_dists[i] = res[i].distance; }
+    return n;
   } catch (...) { return 0; }
 }
 int vanedb_cpp_hnsw_save(vanedb_cpp_hnsw* h, const char* path) {
   if (!h) return 1;
+  if (!path) return 1;
   try { reinterpret_cast<HNSWIndex*>(h)->save(path); return 0; }
   catch (...) { return 1; }
 }
 vanedb_cpp_hnsw* vanedb_cpp_hnsw_load(const char* path) {
+  if (!path) return nullptr;
   try { return reinterpret_cast<vanedb_cpp_hnsw*>(HNSWIndex::load(path).release()); }
   catch (...) { return nullptr; }
 }
@@ -90,6 +94,7 @@ void vanedb_cpp_hnsw_free(vanedb_cpp_hnsw* h) {
 
 int vanedb_cpp_mmap_build(const char* path, size_t dim, vanedb_metric metric,
                           const uint64_t* ids, const float* vecs, size_t n) {
+  if (!path) return 1;
   try {
     MMapVectorStoreBuilder b(dim, to_metric(metric));
     for (size_t i = 0; i < n; ++i) b.add(ids[i], vecs + i * dim);
@@ -98,6 +103,7 @@ int vanedb_cpp_mmap_build(const char* path, size_t dim, vanedb_metric metric,
   } catch (...) { return 1; }
 }
 vanedb_cpp_mmap* vanedb_cpp_mmap_open(const char* path) {
+  if (!path) return nullptr;
   try { return reinterpret_cast<vanedb_cpp_mmap*>(new MMapVectorStore(path)); }
   catch (...) { return nullptr; }
 }
@@ -106,8 +112,9 @@ size_t vanedb_cpp_mmap_search(vanedb_cpp_mmap* m, const float* q, size_t k,
   if (!m) return 0;
   try {
     auto res = reinterpret_cast<MMapVectorStore*>(m)->search(q, k);
-    for (size_t i = 0; i < res.size(); ++i) { out_ids[i] = res[i].id; out_dists[i] = res[i].distance; }
-    return res.size();
+    size_t n = res.size() < k ? res.size() : k;
+    for (size_t i = 0; i < n; ++i) { out_ids[i] = res[i].id; out_dists[i] = res[i].distance; }
+    return n;
   } catch (...) { return 0; }
 }
 void vanedb_cpp_mmap_free(vanedb_cpp_mmap* m) {
