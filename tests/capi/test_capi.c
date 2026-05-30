@@ -82,6 +82,7 @@ int main(void) {
         int rc_null_save = vanedb_cpp_hnsw_save(NULL, "x.bin");                        /* null handle guarded */
         assert(rc_null_save == 1);
         printf("capi: hnsw OK\n");
+        remove("capi_hnsw.bin");
     }
 
     {
@@ -100,6 +101,7 @@ int main(void) {
         size_t n_null_m = vanedb_cpp_mmap_search(NULL, q, 2, ids, ds); /* null handle guarded */
         assert(n_null_m == 0);
         printf("capi: mmap OK\n");
+        remove("capi_mmap.bin");
     }
 
     {
