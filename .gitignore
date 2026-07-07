@@ -51,6 +51,7 @@ external/
 
 # Build artifacts (multiple per-config build trees from benchmarking)
 build_*/
+build-capi/
 
 # Coverage artifacts
 *.gcda

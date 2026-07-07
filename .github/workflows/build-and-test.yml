@@ -361,3 +361,32 @@ jobs:
     - name: Verify Android x86_64 binary
       run: |
         echo "Android x86_64 build completed successfully"
+
+  c-api:
+    name: C API (extern "C") - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache CMake deps
+      uses: actions/cache@v5
+      with:
+        path: build-capi/_deps
+        key: ${{ runner.os }}-capi-deps-${{ hashFiles('CMakeLists.txt') }}
+        restore-keys: ${{ runner.os }}-capi-deps-
+
+    - name: Configure CMake (C API)
+      run: cmake -B build-capi -DCMAKE_BUILD_TYPE=Release -DVANEDB_BUILD_CAPI=ON -DVANEDB_BUILD_BENCHMARKS=OFF -DVANEDB_BUILD_EXAMPLES=OFF -DVANEDB_BUILD_PYTHON=OFF
+
+    # --config Release is required for MSVC (multi-config generator); harmless on single-config Unix generators.
+    - name: Build C API smoke test
+      run: cmake --build build-capi --target test_capi --config Release --parallel
+
+    - name: Run C API test
+      run: ctest --test-dir build-capi -R capi --build-config Release --output-on-failure
