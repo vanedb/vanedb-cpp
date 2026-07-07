@@ -833,3 +833,22 @@ TEST_CASE("HNSWIndex - search_layer epoch wrap", "[hnsw]") {
     REQUIRE(last[i].distance == Catch::Approx(first[i].distance));
   }
 }
+
+TEST_CASE("HNSWIndex - save writes count-proportional files", "[hnsw][persistence]") {
+  // Issue #24 (mirror of vanedb/vanedb#18): an index with a large
+  // pre-allocated capacity but few inserted vectors must not write
+  // capacity-sized arrays. 10 vectors x 32 dims x 4 bytes is ~1.3 KB of
+  // payload; 20 KB allows generous overhead, while capacity-sized arrays
+  // would exceed 140 KB.
+  const std::string filename = "test_hnsw_compact_save.bin";
+  vanedb::HNSWIndex idx(32, vanedb::DistanceMetric::L2, 1000);
+  std::vector<float> v(32);
+  for (uint64_t i = 0; i < 10; ++i) {
+    for (size_t d = 0; d < 32; ++d) v[d] = static_cast<float>(i * 32 + d);
+    idx.add(i, v.data());
+  }
+  idx.save(filename);
+  const auto file_size = std::filesystem::file_size(filename);
+  std::filesystem::remove(filename);
+  REQUIRE(file_size < 20'000);
+}
