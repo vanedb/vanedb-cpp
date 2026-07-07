@@ -33,6 +33,12 @@ template <typename T> void write_vec(std::ofstream& f, const std::vector<T>& v) 
   write_bin(f, v.size());
   if (!v.empty()) f.write(reinterpret_cast<const char*>(v.data()), v.size() * sizeof(T));
 }
+// Write only the first `n` elements of `v`, with the same size-prefix framing
+// as write_vec. Used by the v3 compact format to skip unused capacity.
+template <typename T> void write_vec_prefix(std::ofstream& f, const std::vector<T>& v, size_t n) {
+  write_bin(f, n);
+  if (n) f.write(reinterpret_cast<const char*>(v.data()), n * sizeof(T));
+}
 constexpr size_t MAX_VEC_SIZE = 100000000ULL;
 constexpr size_t MAX_RNG_STATE_SIZE = 10000;  // Reasonable upper bound for serialized RNG state
 template <typename T> void read_vec(std::ifstream& f, std::vector<T>& v) {
@@ -55,7 +61,7 @@ struct HNSWSearchResult {
 class HNSWIndex {
 public:
   static constexpr uint32_t MAGIC = 0x51565244;  // "QVRD" (legacy QuiverDB magic, retained for on-disk compat)
-  static constexpr uint32_t VERSION = 2;  // v2: added RNG state serialization
+  static constexpr uint32_t VERSION = 3;  // v3: compact arrays, count-sized (issue #24); v2 added RNG state
   static constexpr int MAX_LEVEL = 32;  // Reasonable upper bound for HNSW levels
   static constexpr size_t INVALID_ID = static_cast<size_t>(-1);  // Sentinel for empty entry point
 
@@ -212,16 +218,19 @@ public:
       detail::write_bin(f, ef_construction_);
       detail::write_bin(f, ef_search_.load());
       detail::write_bin(f, mult_);
-      detail::write_bin(f, count_.load());
+      const size_t cnt = count_.load();
+      detail::write_bin(f, cnt);
       detail::write_bin(f, ep_.load());
       detail::write_bin(f, max_level_.load());
-      detail::write_vec(f, vectors_);
-      detail::write_vec(f, ext_ids_);
-      detail::write_vec(f, levels_);
+      // v3: persist only the `cnt` live entries, not the full pre-allocated
+      // capacity; load() re-expands to max_elements_.
+      detail::write_vec_prefix(f, vectors_, cnt * dim_);
+      detail::write_vec_prefix(f, ext_ids_, cnt);
+      detail::write_vec_prefix(f, levels_, cnt);
       detail::write_bin(f, id_map_.size());
       for (const auto& [k, v] : id_map_) { detail::write_bin(f, k); detail::write_bin(f, v); }
-      detail::write_bin(f, neighbors_.size());
-      for (size_t i = 0; i < neighbors_.size(); ++i) {
+      detail::write_bin(f, cnt);
+      for (size_t i = 0; i < cnt; ++i) {
         detail::write_bin(f, neighbors_[i].size());
         for (size_t l = 0; l < neighbors_[i].size(); ++l) detail::write_vec(f, neighbors_[i][l]);
       }
@@ -246,7 +255,7 @@ public:
     detail::read_bin(f, magic);
     if (magic != MAGIC) throw std::runtime_error("Invalid magic");
     detail::read_bin(f, ver);
-    if (ver != VERSION && ver != 1) throw std::runtime_error("Unsupported version");
+    if (ver < 1 || ver > VERSION) throw std::runtime_error("Unsupported version");
 
     size_t dim, max_el, M, ef_con, ef_s; uint32_t met; double mult;
     detail::read_bin(f, dim);
@@ -284,6 +293,18 @@ public:
     detail::read_vec(f, idx->vectors_);
     detail::read_vec(f, idx->ext_ids_);
     detail::read_vec(f, idx->levels_);
+    // Array lengths are version-specific: v1/v2 stored full pre-allocated
+    // arrays, v3 stores only the `cnt` live entries.
+    const size_t stored = ver >= 3 ? cnt : max_el;
+    if (idx->vectors_.size() != stored * dim)
+      throw std::runtime_error("Corrupted file: vectors length mismatch");
+    if (idx->ext_ids_.size() != stored || idx->levels_.size() != stored)
+      throw std::runtime_error("Corrupted file: ext_ids/levels length mismatch");
+    // Re-expand to the pre-allocated capacity layout the index expects
+    // (no-ops for v1/v2).
+    idx->vectors_.resize(max_el * dim);
+    idx->ext_ids_.resize(max_el);
+    idx->levels_.resize(max_el);
 
     size_t msz;
     detail::read_bin(f, msz);
@@ -299,7 +320,7 @@ public:
 
     size_t nsz;
     detail::read_bin(f, nsz);
-    if (nsz > max_el) throw std::runtime_error("Corrupted file: neighbors size exceeds max_elements");
+    if (nsz != stored) throw std::runtime_error("Corrupted file: neighbors length mismatch");
     idx->neighbors_.resize(nsz);
     for (size_t i = 0; i < nsz; ++i) {
       size_t lsz;
@@ -314,6 +335,8 @@ public:
         }
       }
     }
+
+    idx->neighbors_.resize(max_el);
 
     // Restore RNG state for deterministic behavior (v2+)
     if (ver >= 2) {

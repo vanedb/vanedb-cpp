@@ -833,3 +833,121 @@ TEST_CASE("HNSWIndex - search_layer epoch wrap", "[hnsw]") {
     REQUIRE(last[i].distance == Catch::Approx(first[i].distance));
   }
 }
+
+TEST_CASE("HNSWIndex - save writes count-proportional files", "[hnsw][persistence]") {
+  // Issue #24 (mirror of vanedb/vanedb#18): an index with a large
+  // pre-allocated capacity but few inserted vectors must not write
+  // capacity-sized arrays. 10 vectors x 32 dims x 4 bytes is ~1.3 KB of
+  // payload; 20 KB allows generous overhead, while capacity-sized arrays
+  // would exceed 140 KB.
+  const std::string filename = "test_hnsw_compact_save.bin";
+  vanedb::HNSWIndex idx(32, vanedb::DistanceMetric::L2, 1000);
+  std::vector<float> v(32);
+  for (uint64_t i = 0; i < 10; ++i) {
+    for (size_t d = 0; d < 32; ++d) v[d] = static_cast<float>(i * 32 + d);
+    idx.add(i, v.data());
+  }
+  idx.save(filename);
+  const auto file_size = std::filesystem::file_size(filename);
+  std::filesystem::remove(filename);
+  REQUIRE(file_size < 20'000);
+}
+
+namespace {
+// Hand-writes an HNSW file in the given version's layout: a consistent
+// 2-of-4-slots index. `full_arrays` selects the legacy v1/v2 layout (arrays
+// span the whole capacity) vs the v3 compact layout (count-sized).
+void write_hnsw_fixture(const std::string& filename, uint32_t ver, bool full_arrays) {
+  using vanedb::detail::write_bin;
+  using vanedb::detail::write_vec;
+  const size_t stored = full_arrays ? 4 : 2;
+  std::ofstream f(filename, std::ios::binary);
+  write_bin(f, vanedb::HNSWIndex::MAGIC);
+  write_bin(f, ver);
+  write_bin(f, size_t{2});    // dim
+  write_bin(f, uint32_t{0});  // metric = L2
+  write_bin(f, size_t{4});    // max_elements
+  write_bin(f, size_t{2});    // M
+  write_bin(f, size_t{10});   // ef_construction
+  write_bin(f, size_t{10});   // ef_search
+  write_bin(f, double{1.0});  // mult
+  write_bin(f, size_t{2});    // count
+  write_bin(f, size_t{0});    // entry point
+  write_bin(f, int{0});       // max_level
+  std::vector<float> vectors = {1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+  vectors.resize(stored * 2);
+  write_vec(f, vectors);
+  std::vector<uint64_t> ext_ids = {10, 20, 0, 0};
+  ext_ids.resize(stored);
+  write_vec(f, ext_ids);
+  std::vector<int> levels(stored, 0);
+  write_vec(f, levels);
+  write_bin(f, size_t{2});  // id_map size
+  write_bin(f, uint64_t{10});
+  write_bin(f, size_t{0});
+  write_bin(f, uint64_t{20});
+  write_bin(f, size_t{1});
+  write_bin(f, stored);  // neighbors size
+  write_bin(f, size_t{1});  // node 0: one level
+  write_vec(f, std::vector<size_t>{1});
+  write_bin(f, size_t{1});  // node 1: one level
+  write_vec(f, std::vector<size_t>{0});
+  for (size_t i = 2; i < stored; ++i) write_bin(f, size_t{0});  // unused slots
+  if (ver >= 2) {
+    std::mt19937 gen(7);
+    std::stringstream ss;
+    ss << gen;
+    const std::string state = ss.str();
+    write_bin(f, state.size());
+    f.write(state.data(), static_cast<std::streamsize>(state.size()));
+  }
+}
+}  // namespace
+
+TEST_CASE("HNSWIndex - load accepts legacy v1/v2 full-capacity files", "[hnsw][persistence]") {
+  for (uint32_t ver : {1u, 2u}) {
+    const std::string filename = "test_hnsw_legacy_v" + std::to_string(ver) + ".bin";
+    write_hnsw_fixture(filename, ver, /*full_arrays=*/true);
+    std::unique_ptr<vanedb::HNSWIndex> idx;
+    REQUIRE_NOTHROW(idx = vanedb::HNSWIndex::load(filename));
+    std::filesystem::remove(filename);
+    REQUIRE(idx->size() == 2);
+    REQUIRE(idx->capacity() == 4);
+    const float q[2] = {1.0f, 0.1f};
+    auto results = idx->search(q, 1);
+    REQUIRE(results.size() == 1);
+    REQUIRE(results[0].id == 10);
+    // Spare capacity from the legacy file must remain usable.
+    const float nv[2] = {0.5f, 0.5f};
+    REQUIRE_NOTHROW(idx->add(30, nv));
+    REQUIRE(idx->size() == 3);
+  }
+}
+
+TEST_CASE("HNSWIndex - load rejects v3 with capacity-sized arrays", "[hnsw][persistence]") {
+  // The legacy full-capacity layout is NOT valid under v3, which stores
+  // exactly `count` entries per array.
+  const std::string filename = "test_hnsw_v3_full_arrays.bin";
+  write_hnsw_fixture(filename, 3, /*full_arrays=*/true);
+  REQUIRE_THROWS_AS(vanedb::HNSWIndex::load(filename), std::runtime_error);
+  std::filesystem::remove(filename);
+}
+
+TEST_CASE("HNSWIndex - empty index save/load roundtrip", "[hnsw][persistence]") {
+  // v3 stores zero-length arrays for an empty index; load must re-expand to
+  // full capacity so subsequent adds work.
+  const std::string filename = "test_hnsw_empty_roundtrip.bin";
+  vanedb::HNSWIndex idx(4, vanedb::DistanceMetric::L2, 10);
+  idx.save(filename);
+  std::unique_ptr<vanedb::HNSWIndex> loaded;
+  REQUIRE_NOTHROW(loaded = vanedb::HNSWIndex::load(filename));
+  std::filesystem::remove(filename);
+  REQUIRE(loaded->size() == 0);
+  REQUIRE(loaded->capacity() == 10);
+  const float v[4] = {1.0f, 2.0f, 3.0f, 4.0f};
+  REQUIRE_NOTHROW(loaded->add(1, v));
+  REQUIRE(loaded->size() == 1);
+  const auto results = loaded->search(v, 1);
+  REQUIRE(results.size() == 1);
+  REQUIRE(results[0].id == 1);
+}
