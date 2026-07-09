@@ -43,7 +43,7 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Cache CMake build
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: |
           build/_deps
@@ -375,7 +375,7 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Cache CMake deps
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: build-capi/_deps
         key: ${{ runner.os }}-capi-deps-${{ hashFiles('CMakeLists.txt') }}
