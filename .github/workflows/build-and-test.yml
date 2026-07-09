@@ -40,10 +40,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Cache CMake build
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: |
           build/_deps
@@ -111,7 +111,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
@@ -153,7 +153,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Configure CMake with sanitizer
       run: |
@@ -181,7 +181,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Install lcov
       run: |
@@ -218,7 +218,7 @@ jobs:
         lcov --list coverage.info
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v6
+      uses: codecov/codecov-action@v7
       with:
         files: coverage.info
         flags: core
@@ -234,7 +234,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Configure CMake
       run: |
@@ -255,7 +255,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Select Xcode
       run: |
@@ -291,7 +291,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Android NDK
       uses: android-actions/setup-android@v4
@@ -331,7 +331,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Set up Android NDK
       uses: android-actions/setup-android@v4
@@ -372,10 +372,10 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Cache CMake deps
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: build-capi/_deps
         key: ${{ runner.os }}-capi-deps-${{ hashFiles('CMakeLists.txt') }}
